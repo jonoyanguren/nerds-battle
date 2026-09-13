@@ -1,0 +1,10 @@
+---
+description: Al guardar trabajo, hacer commit y push
+alwaysApply: true
+---
+
+# Guardar en el remoto
+
+Si el usuario pide guardar, commitear, pushear o "súbelo", haz **commit y push** a `origin` en el mismo paso. No dejes el commit solo en local.
+
+Sigue el protocolo de git del usuario: mensaje en el estilo del repo, sin `--force` ni `--no-verify`, sin commitear secretos.
