@@ -1,0 +1,444 @@
+<title>Nerds Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ============================================================
+   NERDS BATTLE — prototipo v0.1
+   Tokens. Tema único (marcador de pabellón), pintado explícito.
+   ============================================================ */
+:root{
+  --ground:#0B0E13;
+  --panel:#141A23;
+  --panel-2:#1B222D;
+  --line:#28313E;
+  --ink:#EEF2F7;
+  --muted:#8A97A9;
+  --accent:#FF7A2F;      /* ámbar de marcador */
+  --accent-dim:#B4541F;
+  --good:#3DDC97;
+  --bad:#FF4D5E;
+  --display:"Anton", "Arial Narrow", system-ui, sans-serif;
+  --body:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --r:10px;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+#root{max-width:940px;margin:0 auto;padding:28px 20px 64px}
+
+/* --- cabecera --- */
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:24px}
+.wordmark{font-family:var(--display);font-size:clamp(34px,7vw,52px);line-height:.9;letter-spacing:.01em;margin:0}
+.wordmark em{font-style:normal;color:var(--accent)}
+.league{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.scoreboard-mini{display:flex;gap:20px;font-family:var(--mono);font-size:11px;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase}
+.scoreboard-mini b{display:block;font-family:var(--display);font-size:22px;color:var(--ink);
+  letter-spacing:.02em;font-weight:400;font-variant-numeric:tabular-nums}
+
+/* --- panel de reto --- */
+.challenge{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:22px 22px 20px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.stat-name{font-family:var(--display);font-size:clamp(26px,5vw,38px);line-height:1;margin:8px 0 6px}
+.stat-note{color:var(--muted);font-size:13px;max-width:46ch}
+.target{text-align:right}
+.target span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.target b{font-family:var(--display);font-size:clamp(38px,9vw,60px);line-height:.95;font-weight:400;
+  color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+/* --- slots --- */
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:22px 0 18px}
+.slot{background:var(--panel-2);border:1px dashed var(--line);border-radius:var(--r);
+  min-height:104px;padding:12px 10px;display:flex;flex-direction:column;justify-content:space-between;
+  text-align:center;transition:border-color .15s,background .15s}
+.slot.filled{border-style:solid;border-color:var(--line);background:var(--panel)}
+.slot.revealed{border-color:var(--accent-dim)}
+.slot-no{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.15em}
+.slot-name{font-size:13px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.slot-empty{color:var(--muted);font-size:12px}
+.slot-value{font-family:var(--display);font-size:21px;font-weight:400;color:var(--accent);
+  font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.slot-drop{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.slot-x{background:none;border:0;color:var(--muted);font-family:var(--mono);font-size:11px;
+  cursor:pointer;padding:2px;letter-spacing:.1em}
+.slot-x:hover{color:var(--bad)}
+
+/* --- buscador --- */
+.picker{position:relative}
+.picker input{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
+  color:var(--ink);font-family:var(--body);font-size:15px;padding:13px 14px}
+.picker input::placeholder{color:var(--muted)}
+.picker input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.picker input:disabled{opacity:.45}
+.results{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);max-height:262px;overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.results button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;
+  background:none;border:0;border-bottom:1px solid var(--line);color:var(--ink);
+  font-family:var(--body);font-size:14px;text-align:left;padding:11px 14px;cursor:pointer}
+.results button:last-child{border-bottom:0}
+.results button:hover,.results button.cursor{background:var(--panel-2);color:var(--accent)}
+.results .tag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+.no-hit{padding:12px 14px;color:var(--muted);font-size:13px}
+
+/* --- acciones --- */
+.actions{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  padding:13px 22px;border-radius:var(--r);border:1px solid var(--line);background:var(--panel-2);
+  color:var(--ink);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#160A03;font-weight:600}
+.btn.primary:hover:not(:disabled){background:#FF8D4C;border-color:#FF8D4C;color:#160A03}
+.hint{color:var(--muted);font-size:12.5px}
+
+/* --- resultado --- */
+.result{margin-top:24px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.result-top{display:grid;grid-template-columns:repeat(3,1fr);background:var(--panel)}
+.result-cell{padding:16px 18px;border-right:1px solid var(--line)}
+.result-cell:last-child{border-right:0}
+.result-cell span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.result-cell b{font-family:var(--display);font-size:30px;font-weight:400;line-height:1;
+  font-variant-numeric:tabular-nums}
+.verdict{background:var(--panel-2);padding:16px 18px;display:flex;align-items:baseline;
+  justify-content:space-between;gap:14px;flex-wrap:wrap}
+.verdict-title{font-family:var(--display);font-size:24px;line-height:1}
+.verdict-line{color:var(--muted);font-size:13px}
+.bar{height:5px;background:var(--line);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12px;line-height:1.7}
+footer code{font-family:var(--mono);font-size:11.5px;color:#B9C4D3}
+
+@media (max-width:720px){
+  .challenge{grid-template-columns:1fr}
+  .target{text-align:left}
+  .slots{grid-template-columns:repeat(2,1fr)}
+  .result-top{grid-template-columns:1fr;}
+  .result-cell{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useRef, useEffect } = React;
+
+/* ============================================================
+   1. DATOS  —  hardcodeado por ahora.
+   Formato: "Nombre:valor,Nombre:valor,..." (top 100 de cada
+   categoría, totales de carrera NBA, Basketball-Reference).
+   MIGRACIÓN: sustituir este bloque por un fetch a tu API.
+   El resto del juego solo consume PLAYERS[statId] = [{name,value}].
+   ============================================================ */
+const RAW = {
+  pts: "LeBron James:43440,Kareem Abdul-Jabbar:38387,Karl Malone:36928,Kobe Bryant:33643,Kevin Durant:32597,Michael Jordan:32292,Dirk Nowitzki:31560,Wilt Chamberlain:31419,James Harden:29339,Shaquille O'Neal:28596,Carmelo Anthony:28289,Moses Malone:27409,Elvin Hayes:27313,Russell Westbrook:27176,Hakeem Olajuwon:26946,DeMar DeRozan:26711,Oscar Robertson:26710,Dominique Wilkins:26668,Stephen Curry:26528,Tim Duncan:26496,Paul Pierce:26397,John Havlicek:26395,Kevin Garnett:26071,Vince Carter:25728,Alex English:25613,Reggie Miller:25279,Jerry West:25192,Patrick Ewing:24815,Ray Allen:24505,Allen Iverson:24368,Charles Barkley:23757,Robert Parish:23334,Adrian Dantley:23177,Dwyane Wade:23165,Elgin Baylor:23149,Chris Paul:23058,Damian Lillard:22598,Clyde Drexler:22195,Gary Payton:21813,Larry Bird:21791,Hal Greer:21586,Giannis Antetokounmpo:21531,Walt Bellamy:20941,Pau Gasol:20894,Bob Pettit:20880,David Robinson:20790,George Gervin:20708,LaMarcus Aldridge:20558,Mitch Richmond:20497,Joe Johnson:20407,Tom Chambers:20049,Antawn Jamison:20042,John Stockton:19711,Bernard King:19655,Clifford Robinson:19591,Walter Davis:19521,Dwight Howard:19485,Tony Parker:19473,Terry Cummings:19460,Jamal Crawford:19419,Anthony Davis:19385,Paul George:19338,Bob Lanier:19248,Eddie Johnson:19202,Gail Goodrich:19181,Reggie Theus:19015,Dale Ellis:19004,Scottie Pippen:18940,Jason Terry:18881,Chet Walker:18831,Isiah Thomas:18822,Bob McAdoo:18787,Zach Randolph:18578,Mark Aguirre:18458,Dolph Schayes:18438,Kyrie Irving:18433,Rick Barry:18395,Tracy McGrady:18381,Julius Erving:18364,Glen Rice:18336,Dave Bing:18327,Brook Lopez:18151,Devin Booker:18120,Nikola Jokić:18009,World B. Free:17955,Calvin Murphy:17949,Lou Hudson:17940,Chris Mullin:17911,Lenny Wilkens:17772,Bailey Howell:17770,Magic Johnson:17707,Shawn Marion:17700,Nikola Vučević:17684,Rudy Gay:17642,Rolando Blackman:17623,Otis Thorpe:17600,Jason Kidd:17529,Earl Monroe:17454,Steve Nash:17387,Klay Thompson:17346",
+  trb: "Wilt Chamberlain:23924,Bill Russell:21620,Kareem Abdul-Jabbar:17440,Elvin Hayes:16279,Moses Malone:16212,Tim Duncan:15091,Karl Malone:14968,Robert Parish:14715,Kevin Garnett:14662,Dwight Howard:14627,Nate Thurmond:14464,Walt Bellamy:14241,Wes Unseld:13769,Hakeem Olajuwon:13748,Shaquille O'Neal:13099,Buck Williams:13017,Jerry Lucas:12942,Bob Pettit:12849,Charles Barkley:12546,Dikembe Mutombo:12359,Paul Silas:12357,Charles Oakley:12205,LeBron James:12095,Dennis Rodman:11954,Kevin Willis:11901,Patrick Ewing:11607,Andre Drummond:11513,Dirk Nowitzki:11489,Elgin Baylor:11463,Pau Gasol:11305,Dolph Schayes:11256,Bill Bridges:11054,DeAndre Jordan:10861,Jack Sikma:10816,Nikola Vučević:10707,Rudy Gobert:10572,David Robinson:10497,Ben Wallace:10482,Tyson Chandler:10467,Dave Cowens:10444,Bill Laimbeer:10400,Otis Thorpe:10370,Zach Randolph:10208,Shawn Marion:10101,Red Kerr:10092,Kevin Love:9712,Bob Lanier:9698,Sam Lacey:9687,Dave DeBusschere:9618,Marcus Camby:9513,A.C. Green:9473,Horace Grant:9443,Bailey Howell:9383,Vlade Divac:9326,Al Horford:9162,Artis Gilmore:9161,Johnny Green:9083,Jonas Valančiūnas:9052,Elton Brand:9040,Russell Westbrook:9025,Nikola Jokić:8977,Larry Bird:8974,Giannis Antetokounmpo:8882,Shawn Kemp:8834,LaMarcus Aldridge:8736,Jason Kidd:8725,Leroy Ellis:8709,Michael Cage:8646,Anthony Davis:8637,Terry Cummings:8630,Dale Davis:8605,Willis Reed:8414,P.J. Brown:8409,Kevin Durant:8254,Carlos Boozer:8192,Antawn Jamison:8157,Larry Smith:8125,Chris Webber:8124,Lamar Odom:8059,Bob McAdoo:8048,Larry Foust:8041,Karl-Anthony Towns:8025,Happy Hairston:8019,John Havlicek:8007,Carmelo Anthony:7808,Oscar Robertson:7804,Al Jefferson:7690,Paul Millsap:7673,Sam Perkins:7666,Caldwell Jones:7663,Antonio McDyess:7638,Clyde Lee:7626,Chris Bosh:7592,Wayne Embry:7544,Paul Pierce:7527,Maurice Lucas:7520,Scottie Pippen:7494,James Donaldson:7492,Juwan Howard:7428,Rasheed Wallace:7404",
+  ast: "John Stockton:15806,Chris Paul:12552,Jason Kidd:12091,LeBron James:12016,Russell Westbrook:10351,Steve Nash:10335,Mark Jackson:10334,Magic Johnson:10141,Oscar Robertson:9887,Isiah Thomas:9061,Gary Payton:8966,James Harden:8873,Andre Miller:8524,Rod Strickland:7987,Rajon Rondo:7584,Maurice Cheeks:7392,Lenny Wilkens:7211,Terry Porter:7160,Kyle Lowry:7110,Tim Hardaway:7095,Tony Parker:7036,Bob Cousy:6955,Guy Rodgers:6917,Deron Williams:6819,Mike Conley:6782,Jrue Holiday:6762,Stephen Curry:6743,Muggsy Bogues:6726,Kevin Johnson:6711,Derek Harper:6577,Tiny Archibald:6476,Stephon Marbury:6471,John Lucas:6454,Reggie Theus:6453,Norm Nixon:6386,Kobe Bryant:6306,Jerry West:6238,Scottie Pippen:6135,Clyde Drexler:6125,John Havlicek:6114,Nikola Jokić:6080,Damian Lillard:6069,Baron Davis:6025,Mookie Blaylock:5972,Sam Cassell:5939,Avery Johnson:5846,Nick Van Exel:5777,John Wall:5735,Dwyane Wade:5701,Larry Bird:5695,Kareem Abdul-Jabbar:5660,Chauncey Billups:5636,Michael Jordan:5633,Allen Iverson:5624,Mike Bibby:5517,Dennis Johnson:5499,Kevin Garnett:5445,Jason Terry:5415,Dave Bing:5397,Damon Stoudamire:5371,Draymond Green:5324,Kevin Porter:5314,Jeff Hornacek:5281,Kevin Durant:5280,Karl Malone:5248,Rickey Green:5221,Norm Van Lier:5217,Kenny Anderson:5196,DeMar DeRozan:5185,Sleepy Floyd:5175,Ricky Rubio:5160,José Calderón:5148,Andre Iguodala:5147,Raymond Felton:5096,Walt Frazier:5040,Joe Johnson:5001,Nate McMillan:4893,Doc Rivers:4889,Trae Young:4868,Mark Price:4863,Gail Goodrich:4805,Vince Carter:4714,Brad Davis:4709,Paul Pierce:4708,Fat Lever:4696,Wilt Chamberlain:4643,Joe Dumars:4612,Jason Williams:4611,Gus Williams:4597,Jeff Teague:4585,Jamal Crawford:4541,Hal Greer:4540,Sherman Douglas:4536,Jameer Nelson:4508,Randy Smith:4487,Giannis Antetokounmpo:4484,Brevin Knight:4481,Dennis Schröder:4438,Terrell Brandon:4407,Goran Dragić:4405",
+  blk: "Hakeem Olajuwon:3830,Dikembe Mutombo:3289,Kareem Abdul-Jabbar:3189,Mark Eaton:3064,Tim Duncan:3020,David Robinson:2954,Patrick Ewing:2894,Shaquille O'Neal:2732,Tree Rollins:2542,Robert Parish:2361,Alonzo Mourning:2356,Marcus Camby:2331,Dwight Howard:2228,Brook Lopez:2147,Ben Wallace:2137,Shawn Bradley:2119,Manute Bol:2086,George Johnson:2082,Kevin Garnett:2037,Larry Nance:2027,Theo Ratliff:1968,Pau Gasol:1941,Anthony Davis:1848,Rudy Gobert:1842,Elton Brand:1828,Jermaine O'Neal:1820,Elvin Hayes:1771,Serge Ibaka:1759,Artis Gilmore:1747,Moses Malone:1733,Josh Smith:1713,Kevin McHale:1690,Vlade Divac:1631,Herb Williams:1605,Elden Campbell:1602,Benoit Benjamin:1581,DeAndre Jordan:1578,Samuel Dalembert:1546,Wayne Cooper:1535,Myles Turner:1527,Caldwell Jones:1517,Elmore Smith:1483,Alton Lister:1473,Andrei Kirilenko:1461,Rasheed Wallace:1460,Hot Rod Williams:1456,Mark West:1403,Erick Dampier:1398,Clifford Robinson:1390,Bob McAdoo:1363,Al Horford:1351,Kevin Durant:1344,Terry Tyler:1342,Tyson Chandler:1335,Zydrunas Ilgauskas:1327,Julius Erving:1293,Greg Ostertag:1293,Dirk Nowitzki:1281,Shawn Kemp:1279,Dale Davis:1270,James Donaldson:1267,JaVale McGee:1258,Marc Gasol:1254,Shawn Marion:1233,Harvey Catchings:1226,Chris Webber:1200,Andre Drummond:1197,Adonal Foyle:1193,Bo Outlaw:1193,LaMarcus Aldridge:1187,LeBron James:1185,Sam Lacey:1160,Roy Hibbert:1146,Karl Malone:1145,Hassan Whiteside:1143,Horace Grant:1136,Charles Jones:1134,Joe Barry Carroll:1122,Dan Roundfield:1117,P.J. Brown:1116,Rik Smits:1111,Brendan Haywood:1109,Bismack Biyombo:1102,Antonio McDyess:1102,Bob Lanier:1100,Buck Williams:1100,Andrew Lang:1099,Al Jefferson:1093,Andrew Bogut:1091,Giannis Antetokounmpo:1088,Ervin Johnson:1087,Thurl Bailey:1086,Mychal Thompson:1073,Amar'e Stoudemire:1054,Derrick Coleman:1051,Jack Sikma:1048,Robin Lopez:1045,Paul Millsap:1045,Robert Horry:1035,Bill Walton:1034",
+  stl: "John Stockton:3265,Chris Paul:2728,Jason Kidd:2684,Michael Jordan:2514,Gary Payton:2445,LeBron James:2417,Maurice Cheeks:2310,Scottie Pippen:2307,Clyde Drexler:2207,Hakeem Olajuwon:2162,Alvin Robertson:2112,Karl Malone:2085,Mookie Blaylock:2075,Russell Westbrook:2038,Allen Iverson:1983,Derek Harper:1957,Kobe Bryant:1944,Isiah Thomas:1861,Kevin Garnett:1859,James Harden:1794,Andre Iguodala:1765,Shawn Marion:1759,Paul Pierce:1752,Magic Johnson:1724,Metta World Peace:1721,Ron Harper:1716,Fat Lever:1666,Charles Barkley:1648,Mike Conley:1638,Gus Williams:1638,Trevor Ariza:1628,Hersey Hawkins:1622,Eddie Jones:1620,Dwyane Wade:1620,Rod Strickland:1616,Thaddeus Young:1612,Mark Jackson:1608,Jason Terry:1603,Stephen Curry:1602,Paul George:1601,Terry Porter:1583,Doc Rivers:1563,Larry Bird:1556,Doug Christie:1555,Andre Miller:1546,Nate McMillan:1544,Jeff Hornacek:1536,Vince Carter:1530,Baron Davis:1530,Chris Mullin:1530,Jrue Holiday:1527,Kendall Gill:1519,Rajon Rondo:1518,Julius Erving:1508,Reggie Miller:1505,Kyle Lowry:1501,Dennis Johnson:1477,Michael Ray Richardson:1463,Jimmy Butler:1455,Ray Allen:1451,Jerome Kersey:1439,Tim Hardaway:1428,Monta Ellis:1409,Randy Smith:1403,Clifford Robinson:1402,Manu Ginóbili:1392,David Robinson:1388,Dominique Wilkins:1378,Kawhi Leonard:1377,Muggsy Bogues:1369,Ben Wallace:1369,Derek Fisher:1352,Charles Oakley:1351,Rickey Green:1348,Quinn Buckner:1337,Paul Millsap:1327,Fred Brown:1322,T.R. Dunn:1316,Latrell Sprewell:1294,Alvan Adams:1289,Vlade Divac:1288,Walter Davis:1280,David Wesley:1280,John Lucas:1273,Kenny Anderson:1258,Terry Cummings:1255,DeMar DeRozan:1250,Grant Hill:1248,Draymond Green:1244,Kevin Durant:1236,Rudy Gay:1231,Brevin Knight:1229,Tyrone Corbin:1228,Ricky Rubio:1226,Byron Scott:1224,Carmelo Anthony:1223,Robert Parish:1219,Mitch Richmond:1211,Dirk Nowitzki:1210,Reggie Theus:1206",
+  fg3: "Stephen Curry:4248,James Harden:3390,Ray Allen:2973,Klay Thompson:2899,Damian Lillard:2804,LeBron James:2636,Reggie Miller:2560,Kyle Korver:2450,Paul George:2449,Kevin Durant:2377,Vince Carter:2290,Jason Terry:2282,Jamal Crawford:2221,Kyle Lowry:2209,Buddy Hield:2201,CJ McCollum:2180,Paul Pierce:2143,Eric Gordon:2092,Tim Hardaway Jr.:2068,Jason Kidd:1988,Mike Conley:1986,Dirk Nowitzki:1982,Joe Johnson:1978,JJ Redick:1950,J.R. Smith:1930,Kyrie Irving:1876,Chris Paul:1870,Wesley Matthews:1845,Nicolas Batum:1842,Donovan Mitchell:1842,Chauncey Billups:1830,Kobe Bryant:1827,Rashard Lewis:1787,Peja Stojaković:1760,Carmelo Anthony:1731,Kevin Love:1727,Bradley Beal:1724,Dale Ellis:1719,Jrue Holiday:1711,Steve Nash:1685,Kemba Walker:1670,Luka Dončić:1632,Zach LaVine:1632,D'Angelo Russell:1609,Jason Richardson:1608,Trevor Ariza:1605,Jayson Tatum:1593,Mike Miller:1590,Kentavious Caldwell-Pope:1588,Harrison Barnes:1578,Danny Green:1577,Glen Rice:1559,Devin Booker:1546,Eddie Jones:1546,Patty Mills:1546,Tim Hardaway:1542,Nick Van Exel:1528,Mike Bibby:1517,Bojan Bogdanović:1511,Manu Ginóbili:1495,Russell Westbrook:1495,Khris Middleton:1476,Jordan Clarkson:1472,Lou Williams:1457,Danilo Gallinari:1456,Michael Finley:1454,Malik Beasley:1453,Duncan Robinson:1422,Brent Barry:1395,Tobias Harris:1391,Jamal Murray:1391,Fred VanVleet:1386,Antoine Walker:1386,Dan Majerle:1360,Evan Fournier:1359,Kawhi Leonard:1359,Terry Rozier:1356,Baron Davis:1332,Terrence Ross:1329,Mitch Richmond:1326,Ryan Anderson:1325,Anthony Edwards:1314,Allan Houston:1305,Mike Dunleavy:1304,Trae Young:1304,Marcus Morris:1300,Terry Porter:1297,Andrew Wiggins:1285,Jaylen Brown:1284,Mookie Blaylock:1283,Bogdan Bogdanović:1266,Robert Covington:1263,D.J. Augustin:1262,Lauri Markkanen:1257,Vernon Maxwell:1256,Clifford Robinson:1253,Stephen Jackson:1252,Shane Battier:1250,C.J. Miles:1250,Derek Fisher:1248"
+};
+
+const STATS = [
+  { id:"pts", label:"Puntos",     note:"Puntos totales anotados en temporada regular." },
+  { id:"trb", label:"Rebotes",    note:"Rebotes totales, ofensivos y defensivos." },
+  { id:"ast", label:"Asistencias",note:"Asistencias totales en temporada regular." },
+  { id:"blk", label:"Tapones",    note:"Tapones registrados desde que la NBA los contabiliza (1973-74)." },
+  { id:"stl", label:"Robos",      note:"Balones robados desde que la NBA los contabiliza (1973-74)." },
+  { id:"fg3", label:"Triples",    note:"Triples anotados desde que existe la línea (1979-80)." }
+];
+
+const PLAYERS = Object.fromEntries(
+  Object.entries(RAW).map(([id, s]) => [
+    id,
+    s.split(",").map(p => {
+      const i = p.lastIndexOf(":");
+      return { name: p.slice(0, i), value: +p.slice(i + 1) };
+    })
+  ])
+);
+
+/* ============================================================
+   2. MOTOR  —  funciones puras, sin React. Aquí vive el juego.
+   ============================================================ */
+const SLOTS = 5;
+
+const fold = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const fmt  = n => n.toLocaleString("es-ES");
+
+/** Redondea a 3 cifras significativas: 46.291 -> 46.300 */
+function roundNice(n) {
+  const mag = Math.pow(10, Math.floor(Math.log10(n)) - 2);
+  return Math.round(n / mag) * mag;
+}
+
+/** Un reto siempre es alcanzable: el objetivo sale de 5 jugadores reales del pool. */
+function makeChallenge(prevStatId) {
+  const pool = STATS.filter(s => s.id !== prevStatId);
+  const stat = pool[Math.floor(Math.random() * pool.length)];
+  const list = PLAYERS[stat.id];
+  const idx = new Set();
+  while (idx.size < SLOTS) idx.add(Math.floor(Math.random() * list.length));
+  const seed = [...idx].reduce((a, i) => a + list[i].value, 0);
+  return { stat, target: roundNice(seed) };
+}
+
+const VERDICTS = [
+  { max:0.01, title:"Nerd supremo",     line:"Menos de un 1% de error. Esto no es suerte." },
+  { max:0.03, title:"Enciclopedia",     line:"Te sabes los números, no solo los nombres." },
+  { max:0.07, title:"Buen ojo",         line:"Ahí o ahí. Un jugador más fino y la clavas." },
+  { max:0.15, title:"Aficionado",       line:"Sabes quién es quién, pero no cuánto." },
+  { max:Infinity, title:"Fuera de rango", line:"Te has ido lejos. Mira las cifras y vuelve." }
+];
+
+function scoreRound(total, target) {
+  const diff = total - target;
+  const err  = Math.abs(diff) / target;
+  const points = Math.max(0, Math.round(1000 * (1 - err * 5)));
+  const verdict = VERDICTS.find(v => err <= v.max);
+  return { diff, err, points, verdict };
+}
+
+/* --- récord local, best-effort --- */
+const STORE_KEY = "nerds-battle-v1";
+const loadStats = () => {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { rounds:0, best:0, sum:0 }; }
+  catch { return { rounds:0, best:0, sum:0 }; }
+};
+const saveStats = s => { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch {} };
+
+/* ============================================================
+   3. UI
+   ============================================================ */
+function Slot({ n, pick, revealed, onRemove }) {
+  const cls = "slot" + (pick ? " filled" : "") + (revealed ? " revealed" : "");
+  return (
+    <div className={cls}>
+      <div className="slot-no">{String(n + 1).padStart(2, "0")}</div>
+      {pick
+        ? <div className="slot-name">{pick.name}</div>
+        : <div className="slot-empty">vacío</div>}
+      {revealed && pick
+        ? <div className="slot-value">{fmt(pick.value)}</div>
+        : pick
+          ? <button className="slot-x" onClick={onRemove}>QUITAR</button>
+          : <div className="slot-drop">—</div>}
+    </div>
+  );
+}
+
+function Picker({ statId, picks, onPick, disabled }) {
+  const [q, setQ] = useState("");
+  const [cursor, setCursor] = useState(0);
+  const taken = useMemo(() => new Set(picks.filter(Boolean).map(p => p.name)), [picks]);
+
+  const hits = useMemo(() => {
+    const needle = fold(q.trim());
+    if (!needle) return [];
+    return PLAYERS[statId]
+      .filter(p => !taken.has(p.name) && fold(p.name).includes(needle))
+      .slice(0, 40);
+  }, [q, statId, taken]);
+
+  useEffect(() => { setCursor(0); }, [q]);
+  useEffect(() => { setQ(""); }, [statId]);
+
+  const choose = p => { onPick(p); setQ(""); };
+
+  const onKey = e => {
+    if (!hits.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setCursor(c => Math.min(c + 1, hits.length - 1)); }
+    if (e.key === "ArrowUp")   { e.preventDefault(); setCursor(c => Math.max(c - 1, 0)); }
+    if (e.key === "Enter")     { e.preventDefault(); choose(hits[cursor]); }
+    if (e.key === "Escape")    { setQ(""); }
+  };
+
+  return (
+    <div className="picker">
+      <input
+        value={q}
+        onChange={e => setQ(e.target.value)}
+        onKeyDown={onKey}
+        disabled={disabled}
+        placeholder={disabled ? "Ronda cerrada" : "Busca un jugador y colócalo en un hueco…"}
+        aria-label="Buscar jugador"
+      />
+      {q.trim() && !disabled && (
+        <div className="results">
+          {hits.length === 0
+            ? <div className="no-hit">Ningún jugador del ranking coincide con «{q}».</div>
+            : hits.map((p, i) => (
+                <button key={p.name} className={i === cursor ? "cursor" : ""}
+                        onMouseEnter={() => setCursor(i)} onClick={() => choose(p)}>
+                  <span>{p.name}</span>
+                  <span className="tag">#{PLAYERS[statId].indexOf(p) + 1} DEL RANKING</span>
+                </button>
+              ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [challenge, setChallenge] = useState(() => makeChallenge(null));
+  const [picks, setPicks] = useState(Array(SLOTS).fill(null));
+  const [shown, setShown] = useState(0);           // cuántos slots se han revelado
+  const [phase, setPhase] = useState("picking");   // picking | revealing | done
+  const [stats, setStats] = useState(loadStats);
+  const timers = useRef([]);
+
+  const filled = picks.filter(Boolean).length;
+  const total = picks.reduce((a, p, i) => a + (p && i < shown ? p.value : 0), 0);
+  const finalTotal = picks.reduce((a, p) => a + (p ? p.value : 0), 0);
+  const result = phase === "done" ? scoreRound(finalTotal, challenge.target) : null;
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const place = p => {
+    const i = picks.findIndex(x => !x);
+    if (i === -1) return;
+    const next = [...picks]; next[i] = p; setPicks(next);
+  };
+
+  const remove = i => {
+    const next = [...picks]; next[i] = null; setPicks(next);
+  };
+
+  const reveal = () => {
+    setPhase("revealing");
+    timers.current = picks.map((_, i) =>
+      setTimeout(() => {
+        setShown(i + 1);
+        if (i === SLOTS - 1) {
+          setPhase("done");
+          const r = scoreRound(finalTotal, challenge.target);
+          setStats(s => {
+            const next = { rounds:s.rounds + 1, best:Math.max(s.best, r.points), sum:s.sum + r.points };
+            saveStats(next); return next;
+          });
+        }
+      }, 380 * (i + 1))
+    );
+  };
+
+  const nextRound = () => {
+    timers.current.forEach(clearTimeout);
+    setChallenge(makeChallenge(challenge.stat.id));
+    setPicks(Array(SLOTS).fill(null));
+    setShown(0);
+    setPhase("picking");
+  };
+
+  const avg = stats.rounds ? Math.round(stats.sum / stats.rounds) : 0;
+
+  return (
+    <>
+      <header className="masthead">
+        <div>
+          <div className="league">Sports · NBA · Carrera</div>
+          <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
+        </div>
+        <div className="scoreboard-mini">
+          <div>Récord<b>{stats.best}</b></div>
+          <div>Media<b>{avg}</b></div>
+          <div>Rondas<b>{stats.rounds}</b></div>
+        </div>
+      </header>
+
+      <section className="challenge">
+        <div>
+          <div className="eyebrow">Reto · 5 jugadores</div>
+          <h2 className="stat-name">{challenge.stat.label} en carrera</h2>
+          <p className="stat-note">{challenge.stat.note} Suma cinco jugadores y acércate al objetivo. No verás sus cifras hasta el final.</p>
+        </div>
+        <div className="target">
+          <span>Objetivo</span>
+          <b>{fmt(challenge.target)}</b>
+        </div>
+      </section>
+
+      <div className="slots">
+        {picks.map((p, i) => (
+          <Slot key={i} n={i} pick={p} revealed={i < shown} onRemove={() => remove(i)} />
+        ))}
+      </div>
+
+      <Picker statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
+
+      <div className="actions">
+        {phase === "done"
+          ? <button className="btn primary" onClick={nextRound}>Nuevo reto</button>
+          : <button className="btn primary" onClick={reveal} disabled={filled < SLOTS || phase !== "picking"}>
+              Revelar cifras
+            </button>}
+        {phase === "picking" && (
+          <span className="hint">
+            {filled < SLOTS
+              ? `${SLOTS - filled} ${SLOTS - filled === 1 ? "hueco" : "huecos"} por rellenar`
+              : "Cinco elegidos. Cuando quieras."}
+          </span>
+        )}
+        {phase === "revealing" && <span className="hint">Sumando… {fmt(total)}</span>}
+      </div>
+
+      {result && (
+        <section className="result">
+          <div className="result-top">
+            <div className="result-cell">
+              <span>Tu suma</span>
+              <b>{fmt(finalTotal)}</b>
+            </div>
+            <div className="result-cell">
+              <span>Diferencia</span>
+              <b style={{ color: result.diff === 0 ? "var(--good)" : result.diff > 0 ? "var(--accent)" : "var(--bad)" }}>
+                {result.diff > 0 ? "+" : ""}{fmt(result.diff)}
+              </b>
+            </div>
+            <div className="result-cell">
+              <span>Puntos</span>
+              <b style={{ color:"var(--good)" }}>{result.points}</b>
+            </div>
+          </div>
+          <div className="bar"><i style={{ width: `${result.points / 10}%` }}></i></div>
+          <div className="verdict">
+            <div className="verdict-title">{result.verdict.title}</div>
+            <div className="verdict-line">
+              {result.verdict.line} Error del {(result.err * 100).toFixed(1)}%.
+            </div>
+          </div>
+        </section>
+      )}
+
+      <footer>
+        Prototipo v0.1 · un jugador · datos de carrera NBA (temporada regular, top 100 de cada categoría, Basketball-Reference).<br />
+        El objetivo de cada reto se genera sumando cinco jugadores reales del ranking, así que siempre hay una combinación que lo clava.<br />
+        Para enchufar datos reales: sustituye <code>RAW</code> por tu fuente. El motor solo consume <code>PLAYERS[statId] = [&#123;name, value&#125;]</code>.
+      </footer>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
