@@ -21,7 +21,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
 - `src/engine.ts` — motor: `makeChallenge` y `scoreRound`. Funciones puras,
   sin React. Consumen `PLAYERS[statId] = [{name, value, nbaId}]`.
-- `src/App.tsx` — UI (slots, buscador, caras, revelado, marcador local).
+- `src/App.tsx` — UI (client component).
+- `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`).
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
 - `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
 - `README.md` — visión general y roadmap.
@@ -33,16 +34,16 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - **Los datos son una dependencia, no parte del juego.** El motor solo consume
   `PLAYERS[statId] = [{name, value, nbaId}]`. Cuando se migre a base de datos, esa
   forma no cambia.
-- **Nada de dependencias nuevas sin motivo.** Ahora: Vite + React + TS.
-  Destino: Next.js + Prisma + Auth.js. Si algo pide otra librería, plantéalo.
+- **Nada de dependencias nuevas sin motivo.** Ahora: Next.js + React + TS.
+  Siguiente: Prisma + Auth.js. Si algo pide otra librería, plantéalo.
 - **Un cambio, una pregunta respondida.** Este proyecto existe para saber si el
   juego engancha. Las features que no ayuden a contestar eso esperan.
 
 ## Estado actual y lo siguiente
 
-Prototipo Vite jugable (`npm run dev`). El enlace no urge. Orden en
-`docs/tareas.md`: Next.js → Postgres → Google → API ciega → 2 jugadores
-→ deploy → colegas (M0).
+Next.js jugable (`npm run dev`). El enlace no urge. Orden en
+`docs/tareas.md`: Postgres → Google → API ciega → 2 jugadores → deploy
+→ colegas (M0).
 
 ## Idioma
 

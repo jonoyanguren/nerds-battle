@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
 import { DATA_UPDATED_AT, PLAYERS, headshotUrl, initials } from "./data";
 import {
@@ -10,7 +12,62 @@ import {
   loadStats,
   saveStats,
 } from "./engine";
-import type { LocalStats, Phase, Player, StatId } from "./types";
+import type { Challenge, LocalStats, Phase, Player, StatId } from "./types";
+
+const REVEAL_STEP_MS = 720;
+const COUNT_SLOT_MS = 1400;
+const COUNT_SUM_MS = 900;
+const COUNT_SCORE_MS = 2000;
+
+function easeOutQuart(t: number) {
+  return 1 - (1 - t) ** 4;
+}
+
+function useCountUp(target: number, duration: number) {
+  const [display, setDisplay] = useState(0);
+  const displayRef = useRef(0);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    cancelAnimationFrame(rafRef.current);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const from = displayRef.current;
+    if (reduced || duration === 0 || target === from) {
+      displayRef.current = target;
+      setDisplay(target);
+      return;
+    }
+    if (target === 0) {
+      displayRef.current = 0;
+      setDisplay(0);
+      return;
+    }
+
+    const delta = target - from;
+    let start: number | null = null;
+    const tick = (now: number) => {
+      if (start === null) start = now;
+      const t = Math.min(1, (now - start) / duration);
+      const next = from + delta * easeOutQuart(t);
+      displayRef.current = next;
+      setDisplay(next);
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+      else {
+        displayRef.current = target;
+        setDisplay(target);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return Math.round(display);
+}
+
+function SlotValue({ value }: { value: number }) {
+  const n = useCountUp(value, COUNT_SLOT_MS);
+  return <div className="slot-value">{fmt(n)}</div>;
+}
 
 type SlotProps = {
   n: number;
@@ -45,7 +102,7 @@ function Slot({ n, pick, revealed, onRemove }: SlotProps) {
         ? <div className="slot-name">{pick.name}</div>
         : <div className="slot-empty">vacío</div>}
       {revealed && pick
-        ? <div className="slot-value">{fmt(pick.value)}</div>
+        ? <SlotValue key={pick.name} value={pick.value} />
         : pick
           ? <button className="slot-x" onClick={onRemove}>QUITAR</button>
           : <div className="slot-drop">—</div>}
@@ -96,7 +153,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
         onChange={e => setQ(e.target.value)}
         onKeyDown={onKey}
         disabled={disabled}
-        placeholder={disabled ? "Ronda cerrada" : "Busca un jugador y colócalo en un hueco…"}
+        placeholder={disabled ? "Ronda cerrada" : "Fichar jugador…"}
         aria-label="Buscar jugador"
       />
       {q.trim() && !disabled && (
@@ -119,20 +176,39 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
   );
 }
 
+type Sting = "hit" | "close" | "miss";
+
+function stingOf(err: number): Sting {
+  if (err <= 0.03) return "hit";
+  if (err <= 0.15) return "close";
+  return "miss";
+}
+
+const STING_LABEL: Record<Sting, string> = {
+  hit: "Clavada",
+  close: "Cerca",
+  miss: "Fuera",
+};
+
 export default function App() {
-  const [challenge, setChallenge] = useState(() => makeChallenge(null));
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [picks, setPicks] = useState<(Player | null)[]>(() => Array(SLOTS).fill(null));
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("picking");
-  const [stats, setStats] = useState<LocalStats>(loadStats);
+  const [stats, setStats] = useState<LocalStats>({ rounds: 0, best: 0, sum: 0 });
+  const [sting, setSting] = useState<Sting | null>(null);
   const timers = useRef<number[]>([]);
+
+  useEffect(() => {
+    setStats(loadStats());
+    setChallenge(makeChallenge(null));
+    return () => timers.current.forEach(clearTimeout);
+  }, []);
 
   const filled = picks.filter(Boolean).length;
   const total = picks.reduce((a, p, i) => a + (p && i < shown ? p.value : 0), 0);
   const finalTotal = picks.reduce((a, p) => a + (p ? p.value : 0), 0);
-  const result = phase === "done" ? scoreRound(finalTotal, challenge.target) : null;
-
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const result = challenge && phase === "done" ? scoreRound(finalTotal, challenge.target) : null;
 
   const place = (p: Player) => {
     const i = picks.findIndex(x => !x);
@@ -155,46 +231,68 @@ export default function App() {
         setShown(i + 1);
         if (i === SLOTS - 1) {
           setPhase("done");
-          const r = scoreRound(finalTotal, challenge.target);
+          const r = scoreRound(finalTotal, challenge!.target);
+          const grade = stingOf(r.err);
+          setSting(grade);
+          timers.current.push(window.setTimeout(() => setSting(null), 2200));
           setStats(s => {
             const next = { rounds: s.rounds + 1, best: Math.max(s.best, r.points), sum: s.sum + r.points };
             saveStats(next);
             return next;
           });
         }
-      }, 380 * (i + 1))
+      }, REVEAL_STEP_MS * (i + 1))
     );
   };
 
   const nextRound = () => {
     timers.current.forEach(clearTimeout);
-    setChallenge(makeChallenge(challenge.stat.id));
+    setChallenge(makeChallenge(challenge!.stat.id));
     setPicks(Array(SLOTS).fill(null));
     setShown(0);
     setPhase("picking");
+    setSting(null);
   };
 
+  const liveSum = useCountUp(total, COUNT_SUM_MS);
+  const boardOn = phase === "done" && sting === null;
+  const boardSum = useCountUp(boardOn ? finalTotal : 0, COUNT_SUM_MS);
+  const boardDiff = useCountUp(boardOn ? (result?.diff ?? 0) : 0, COUNT_SUM_MS);
+  const boardPts = useCountUp(boardOn ? (result?.points ?? 0) : 0, COUNT_SCORE_MS);
+
   const avg = stats.rounds ? Math.round(stats.sum / stats.rounds) : 0;
+  const phaseLabel = phase === "picking" ? "Fichajes" : phase === "revealing" ? "Revelando" : "Final";
+
+  const grade = result ? stingOf(result.err) : null;
+
+  if (!challenge) return <div className="arena" aria-busy="true" />;
 
   return (
-    <>
-      <header className="masthead">
+    <div className={grade ? `arena arena-${grade}` : "arena"}>
+      {sting && (
+        <button type="button" className={`sting sting-${sting}`} onClick={() => setSting(null)}>
+          <span className="sting-word">{STING_LABEL[sting]}</span>
+          {result && <span className="sting-sub">{result.verdict.title}</span>}
+        </button>
+      )}
+
+      <header className="hud">
         <div>
-          <div className="league">Sports · NBA · Carrera · act. {fmtDate(DATA_UPDATED_AT)}</div>
           <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
+          <div className="hud-meta">NBA · Carrera · {fmtDate(DATA_UPDATED_AT)}</div>
         </div>
-        <div className="scoreboard-mini">
-          <div>Récord<b>{stats.best}</b></div>
-          <div>Media<b>{avg}</b></div>
-          <div>Rondas<b>{stats.rounds}</b></div>
+        <div className="hud-stats">
+          <div className="hud-stat">Récord<b>{stats.best}</b></div>
+          <div className="hud-stat">Media<b>{avg}</b></div>
+          <div className="hud-stat">Rondas<b>{stats.rounds}</b></div>
         </div>
       </header>
 
-      <section className="challenge">
+      <section className="jumbo">
         <div>
-          <div className="eyebrow">Reto · 5 jugadores</div>
-          <h2 className="stat-name">{challenge.stat.label} en carrera</h2>
-          <p className="stat-note">{challenge.stat.note} Suma cinco jugadores y acércate al objetivo. No verás sus cifras hasta el final.</p>
+          <div className="phase">{phaseLabel} · 5 vs objetivo</div>
+          <h2 className="stat-name">{challenge.stat.label}</h2>
+          <p className="stat-note">Elige cinco. Las cifras salen al final.</p>
         </div>
         <div className="target">
           <span>Objetivo</span>
@@ -202,63 +300,58 @@ export default function App() {
         </div>
       </section>
 
+      <div className="roster-label">
+        <span>Plantilla</span>
+        <span>{filled}/{SLOTS}</span>
+      </div>
       <div className="slots">
         {picks.map((p, i) => (
           <Slot key={i} n={i} pick={p} revealed={i < shown} onRemove={() => remove(i)} />
         ))}
       </div>
 
-      <Picker statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
-
-      <div className="actions">
+      <div className="draft">
+        <Picker statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
         {phase === "done"
-          ? <button className="btn primary" onClick={nextRound}>Nuevo reto</button>
+          ? <button className="btn primary" onClick={nextRound}>Siguiente</button>
           : <button className="btn primary" onClick={reveal} disabled={filled < SLOTS || phase !== "picking"}>
-              Revelar cifras
+              Fijar
             </button>}
-        {phase === "picking" && (
-          <span className="hint">
-            {filled < SLOTS
-              ? `${SLOTS - filled} ${SLOTS - filled === 1 ? "hueco" : "huecos"} por rellenar`
-              : "Cinco elegidos. Cuando quieras."}
-          </span>
-        )}
-        {phase === "revealing" && <span className="hint">Sumando… {fmt(total)}</span>}
       </div>
+      {phase === "picking" && filled === SLOTS && <span className="hint">Plantilla lista. Fija.</span>}
+      {phase === "revealing" && <span className="hint">Suma {fmt(liveSum)}</span>}
 
       {result && (
-        <section className="result">
+        <section className={`result result-${grade}`}>
           <div className="result-top">
             <div className="result-cell">
-              <span>Tu suma</span>
-              <b>{fmt(finalTotal)}</b>
+              <span>Suma</span>
+              <b>{fmt(boardSum)}</b>
             </div>
             <div className="result-cell">
-              <span>Diferencia</span>
+              <span>Diff</span>
               <b style={{ color: result.diff === 0 ? "var(--good)" : result.diff > 0 ? "var(--accent)" : "var(--bad)" }}>
-                {result.diff > 0 ? "+" : ""}{fmt(result.diff)}
+                {boardDiff > 0 ? "+" : ""}{fmt(boardDiff)}
               </b>
             </div>
             <div className="result-cell">
-              <span>Puntos</span>
-              <b style={{ color: "var(--good)" }}>{result.points}</b>
+              <span>Score</span>
+              <b style={{ color: "var(--good)" }}>{boardPts}</b>
             </div>
           </div>
-          <div className="bar"><i style={{ width: `${result.points / 10}%` }}></i></div>
+          <div className="bar"><i style={{ width: boardOn ? `${result.points / 10}%` : "0%" }}></i></div>
           <div className="verdict">
             <div className="verdict-title">{result.verdict.title}</div>
             <div className="verdict-line">
-              {result.verdict.line} Error del {(result.err * 100).toFixed(1)}%.
+              {result.verdict.line} Error { (result.err * 100).toFixed(1)}%.
             </div>
           </div>
         </section>
       )}
 
-      <footer>
-        Última actualización: {fmtDate(DATA_UPDATED_AT)} · carrera NBA, temporada regular, {PLAYERS[challenge.stat.id].length.toLocaleString("es-ES")} jugadores en este ranking (NBA Stats).<br />
-        El objetivo de cada reto se genera sumando cinco jugadores reales del ranking, así que siempre hay una combinación que lo clava.<br />
-        Prototipo v0.1 · un jugador. Fotos del CDN de la NBA. <code>npm run sync</code> pisa los datos.
-      </footer>
-    </>
+      <p className="credit">
+        {PLAYERS[challenge.stat.id].length.toLocaleString("es-ES")} jugadores · act. {fmtDate(DATA_UPDATED_AT)}
+      </p>
+    </div>
   );
 }

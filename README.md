@@ -25,7 +25,7 @@ o a mano. Si el sync falla, se quedan los datos de la semana anterior.
 
 | Capa | Ahora | Destino |
 |---|---|---|
-| UI | Vite + React 18 + TypeScript | Next.js (App Router) + TypeScript |
+| UI | Next.js (App Router) + React 19 | Auth.js + Postgres |
 | Datos | `src/data.generated.json` (`npm run sync`) | Postgres: `players(name, league, stat, value, nba_id)` |
 | Estado | `useState` + localStorage | Server actions + sesión |
 | Ranking | no hay | tabla `scores` + página de clasificación |

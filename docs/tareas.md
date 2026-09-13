@@ -27,9 +27,9 @@ cron      →  pisa players + updated_at + nba_id
 
 Portar, no rediseñar. Sigue leyendo `data.generated.json`.
 
-- [ ] App Next.js + TypeScript (el Vite se queda atrás)
-- [ ] Copiar motor, datos, UI
-- [ ] `npm run dev` y una ronda completa igual que ahora
+- [x] App Next.js + TypeScript (Vite fuera)
+- [x] Motor, datos y UI en `src/` (`App.tsx` es client)
+- [x] `npm run dev` y una ronda completa igual que ahora
 
 ### M2 · Postgres + semilla
 
