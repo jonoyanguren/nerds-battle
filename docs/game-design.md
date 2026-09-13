@@ -7,8 +7,9 @@ revelado → puntuación → siguiente.
 
 ## Generación del objetivo
 
-El objetivo sale de sumar 5 jugadores reales elegidos al azar del ranking de esa
-estadística, redondeado a 3 cifras significativas.
+El objetivo sale de sumar 5 jugadores reales del **tramo alto** (top 150) de
+esa estadística, redondeado a 3 cifras significativas. El buscador ve ~2000
+para poder corregir con jugadores menores.
 
 Motivo: un objetivo arbitrario puede ser imposible (nadie suma 500.000 puntos
 con 5 jugadores) o trivial. Derivarlo del propio pool garantiza que existe al
@@ -44,8 +45,9 @@ Es lo primero que hay que tocar tras unas cuantas partidas.
   aritmética. El buscador premia saber quién está en el ranking.
 - **¿Mostrar la posición en el ranking?** Ahora sí (#14 del ranking). Es una
   pista fuerte: ordena a los jugadores sin dar la cifra. Probar a quitarlo.
-- **¿Cuántos jugadores por pool?** 100. Con menos, todos reconocibles pero poca
-  rejugabilidad; con más, demasiados nombres oscuros.
+- **¿Cuántos jugadores por pool?** 2000 en el buscador (para poder afinar con
+  gente “mala”). El objetivo se siembra solo del top 150, si no los retos
+  caen al suelo.
 
 ## Modo 2 jugadores (sin construir)
 

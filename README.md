@@ -9,28 +9,35 @@ cifras** y al final descubres cuánto te has acercado.
 
 ## Estado
 
-**Prototipo v0.1 jugable.** Un jugador, 6 estadísticas NBA, 100 jugadores por
-estadística, datos hardcodeados. Sin backend, sin cuentas, sin ranking.
+**Prototipo v0.1 jugable.** Un jugador, 6 estadísticas NBA, ~2000 jugadores por
+estadística. Sin backend, sin cuentas, sin ranking.
 
-Abre `prototype/nerds-battle.html` en el navegador. No necesita build.
+```bash
+npm install
+npm run dev
+```
+
+Datos: `npm run sync` tira de NBA Stats (top 2000 de carrera + ids para fotos)
+y pisa `src/data.generated.json`. Cron semanal en GitHub Actions (lunes 06:00 UTC)
+o a mano. Si el sync falla, se quedan los datos de la semana anterior.
 
 ## Stack previsto
 
 | Capa | Ahora | Destino |
 |---|---|---|
-| UI | React 18 por CDN, un archivo | Next.js (App Router) + TypeScript |
-| Datos | constante `RAW` en el HTML | Postgres: `players(name, league, stat, value)` |
+| UI | Vite + React 18 + TypeScript | Next.js (App Router) + TypeScript |
+| Datos | `src/data.generated.json` (`npm run sync`) | Postgres: `players(name, league, stat, value, nba_id)` |
 | Estado | `useState` + localStorage | Server actions + sesión |
 | Ranking | no hay | tabla `scores` + página de clasificación |
 
 El motor del juego (`makeChallenge`, `scoreRound`) son funciones puras sin React,
-aisladas a propósito. Al migrar solo cambia de dónde salen los datos.
+en `src/engine.ts`. Al migrar solo cambia de dónde salen los datos.
 
 ## Cómo funciona una ronda
 
 1. Se elige una estadística al azar (nunca la misma dos veces seguidas).
-2. El objetivo se genera **sumando 5 jugadores reales del ranking** y redondeando
-   a 3 cifras significativas. Así todo reto tiene solución cercana.
+2. El objetivo se genera **sumando 5 jugadores del top 150** y redondeando
+   a 3 cifras significativas. El buscador tiene ~2000 para afinar.
 3. El jugador coloca 5 jugadores. No se puede repetir.
 4. Al revelar, se suman las cifras una a una y se puntúa:
    `puntos = 1000 · (1 − error_relativo · 5)`, con suelo en 0.
@@ -38,16 +45,22 @@ aisladas a propósito. Al migrar solo cambia de dónde salen los datos.
 
 ## Datos
 
-Totales de carrera NBA en temporada regular, top 100 de cada categoría, vía
-[Basketball-Reference](https://www.basketball-reference.com/leaders/).
-Congelados a septiembre de 2026 — los jugadores en activo se quedan desfasados.
+Totales de carrera NBA en temporada regular, top 2000 de cada categoría, vía
+NBA Stats (`alltimeleadersgrids`). Las fotos son del CDN de la NBA
+(`260x190/{nbaId}.png`). `npm run sync` actualiza cifras, ids y la fecha
+que se ve en la UI.
 
 Categorías: puntos, rebotes, asistencias, tapones, robos, triples.
 
 ## Roadmap
 
-- [ ] Ajustar la curva de puntuación jugando de verdad (es lo que más chirría)
-- [ ] Modo 2 jugadores: mismo reto, dos rondas, comparación
-- [ ] Reto diario tipo Wordle + resultado compartible
-- [ ] Migrar datos a Postgres y añadir más ligas (fútbol, F1, tenis)
-- [ ] Ranking global
+El tablero de trabajo está en [`docs/tareas.md`](docs/tareas.md).
+
+- [ ] M1 · Pasar a Next.js (mismo juego)
+- [ ] M2 · Postgres + semilla
+- [ ] M3 · Login con Google (Auth.js)
+- [ ] M4 · API ciega
+- [ ] M5 · Cron → Postgres
+- [ ] M6 · 2 jugadores
+- [ ] M7 · Deploy
+- [ ] M0 · Playtest con colegas y ajustar la curva

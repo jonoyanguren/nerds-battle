@@ -15,9 +15,15 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 
 ## Dónde está cada cosa
 
-- `prototype/nerds-battle.html` — prototipo v0.1 completo, un solo archivo.
-  Tres bloques marcados con comentarios: `1. DATOS`, `2. MOTOR`, `3. UI`.
+- `src/types.ts` — contrato de datos y tipos del motor.
+- `src/data.ts` — STATS + helpers de foto. Lee `src/data.generated.json`.
+- `src/data.generated.json` — top 2000 + `nbaId`. Lo pisa `npm run sync`
+  (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
+- `src/engine.ts` — motor: `makeChallenge` y `scoreRound`. Funciones puras,
+  sin React. Consumen `PLAYERS[statId] = [{name, value, nbaId}]`.
+- `src/App.tsx` — UI (slots, buscador, caras, revelado, marcador local).
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
+- `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
 - `README.md` — visión general y roadmap.
 
 ## Reglas de trabajo
@@ -25,21 +31,18 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - **El motor antes que la UI.** `makeChallenge` y `scoreRound` son funciones
   puras sin React. Cualquier regla nueva del juego va ahí, no en un componente.
 - **Los datos son una dependencia, no parte del juego.** El motor solo consume
-  `PLAYERS[statId] = [{name, value}]`. Cuando se migre a base de datos, esa
+  `PLAYERS[statId] = [{name, value, nbaId}]`. Cuando se migre a base de datos, esa
   forma no cambia.
-- **Nada de dependencias nuevas sin motivo.** El prototipo tiene React y nada
-  más. Si algo pide una librería, plantéalo antes.
+- **Nada de dependencias nuevas sin motivo.** Ahora: Vite + React + TS.
+  Destino: Next.js + Prisma + Auth.js. Si algo pide otra librería, plantéalo.
 - **Un cambio, una pregunta respondida.** Este proyecto existe para saber si el
   juego engancha. Las features que no ayuden a contestar eso esperan.
 
 ## Estado actual y lo siguiente
 
-Prototipo jugable de un jugador. Lo siguiente, por orden:
-
-1. Curva de puntuación — la fórmula actual (`error × 5`) es un primer intento
-   sin validar. Ajustarla jugando.
-2. Modo 2 jugadores.
-3. Migración a Next.js + Postgres, solo cuando 1 y 2 confirmen que merece la pena.
+Prototipo Vite jugable (`npm run dev`). El enlace no urge. Orden en
+`docs/tareas.md`: Next.js → Postgres → Google → API ciega → 2 jugadores
+→ deploy → colegas (M0).
 
 ## Idioma
 
