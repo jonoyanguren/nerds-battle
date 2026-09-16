@@ -1,6 +1,5 @@
-import { PLAYERS, STATS } from "./data";
 import { SLOTS } from "./format";
-import type { Challenge, RoundScore, StatId, Verdict } from "./types";
+import type { Catalog, Challenge, RoundScore, Verdict } from "./types";
 
 export { SLOTS } from "./format";
 
@@ -14,15 +13,16 @@ export function roundNice(n: number) {
 }
 
 /** Un reto siempre es alcanzable: el objetivo sale de 5 jugadores del tramo alto. */
-export function makeChallenge(prevStatId: StatId | null): Challenge {
-  const pool = STATS.filter(s => s.id !== prevStatId);
-  const stat = pool[Math.floor(Math.random() * pool.length)];
-  const list = PLAYERS[stat.id];
+export function makeChallenge(catalog: Catalog, prevStatId: string | null): Challenge {
+  const pool = catalog.stats.filter(s => s.id !== prevStatId);
+  const stats = pool.length > 0 ? pool : catalog.stats;
+  const stat = stats[Math.floor(Math.random() * stats.length)];
+  const list = catalog.players[stat.id];
   const seedFrom = Math.min(SEED_POOL, list.length);
   const idx = new Set<number>();
   while (idx.size < SLOTS) idx.add(Math.floor(Math.random() * seedFrom));
   const seed = [...idx].reduce((a, i) => a + list[i].value, 0);
-  return { stat, target: roundNice(seed) };
+  return { sport: catalog.sport, stat, target: roundNice(seed) };
 }
 
 export const VERDICTS: Verdict[] = [

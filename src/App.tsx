@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
+import { SPORTS, DEFAULT_SPORT_ID } from "./catalogs/registry";
 import { SLOTS, fold, fmt, fmtDate } from "./format";
-import { headshotUrl, initials } from "./photos";
+import { photoUrl, initials } from "./photos";
 import { loadStats, saveStats } from "./storage";
 import type {
   CatalogPlayer,
@@ -11,7 +12,7 @@ import type {
   Phase,
   RosterPick,
   RoundScore,
-  StatId,
+  Sport,
 } from "./types";
 
 const REVEAL_STEP_MS = 720;
@@ -69,18 +70,18 @@ function SlotValue({ value }: { value: number }) {
   return <div className="slot-value">{fmt(n)}</div>;
 }
 
-type FacePlayer = { name: string; nbaId: number };
+type FacePlayer = { name: string; photoId: string };
 
-function Face({ player, size = "slot" }: { player: FacePlayer; size?: "slot" | "list" }) {
+function Face({ player, sport, size = "slot" }: { player: FacePlayer; sport: Sport; size?: "slot" | "list" }) {
   const [broken, setBroken] = useState(false);
-  useEffect(() => { setBroken(false); }, [player.nbaId]);
+  useEffect(() => { setBroken(false); }, [player.photoId]);
   if (broken) {
     return <span className={`face face-fallback face-${size}`}>{initials(player.name)}</span>;
   }
   return (
     <img
       className={`face face-${size}`}
-      src={headshotUrl(player.nbaId)}
+      src={photoUrl(sport.photoUrl, player.photoId)}
       alt=""
       onError={() => setBroken(true)}
     />
@@ -90,16 +91,17 @@ function Face({ player, size = "slot" }: { player: FacePlayer; size?: "slot" | "
 type SlotProps = {
   n: number;
   pick: RosterPick | null;
+  sport: Sport;
   revealed: boolean;
   onRemove: () => void;
 };
 
-function Slot({ n, pick, revealed, onRemove }: SlotProps) {
+function Slot({ n, pick, sport, revealed, onRemove }: SlotProps) {
   const cls = "slot" + (pick ? " filled" : "") + (revealed ? " revealed" : "");
   return (
     <div className={cls}>
       <div className="slot-no">{String(n + 1).padStart(2, "0")}</div>
-      {pick ? <Face player={pick} size="slot" /> : <div className="face face-slot face-empty" />}
+      {pick ? <Face player={pick} sport={sport} size="slot" /> : <div className="face face-slot face-empty" />}
       {pick
         ? <div className="slot-name">{pick.name}</div>
         : <div className="slot-empty">vacío</div>}
@@ -112,24 +114,25 @@ function Slot({ n, pick, revealed, onRemove }: SlotProps) {
   );
 }
 
-async function fetchChallenge(prevStatId: StatId | null): Promise<ChallengePayload> {
+async function fetchChallenge(sportId: string, prevStatId: string | null): Promise<ChallengePayload> {
   const res = await fetch("/api/challenge", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prevStatId }),
+    body: JSON.stringify({ sportId, prevStatId }),
   });
   if (!res.ok) throw new Error("challenge");
   return res.json() as Promise<ChallengePayload>;
 }
 
 type PickerProps = {
-  statId: StatId;
+  sport: Sport;
+  statId: string;
   picks: (RosterPick | null)[];
   onPick: (player: CatalogPlayer) => void;
   disabled: boolean;
 };
 
-function Picker({ statId, picks, onPick, disabled }: PickerProps) {
+function Picker({ sport, statId, picks, onPick, disabled }: PickerProps) {
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
   const [hits, setHits] = useState<CatalogPlayer[]>([]);
@@ -142,7 +145,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
   useEffect(() => {
     setQ("");
     setHits([]);
-  }, [statId]);
+  }, [statId, sport.id]);
 
   useEffect(() => { setCursor(0); }, [q, hits]);
 
@@ -158,7 +161,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
     const t = window.setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/players?stat=${encodeURIComponent(statId)}&q=${encodeURIComponent(q.trim())}`,
+          `/api/players?sport=${encodeURIComponent(sport.id)}&stat=${encodeURIComponent(statId)}&q=${encodeURIComponent(q.trim())}`,
           { signal: ac.signal }
         );
         if (!res.ok) throw new Error("players");
@@ -175,7 +178,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
       clearTimeout(t);
       ac.abort();
     };
-  }, [q, statId, taken]);
+  }, [q, sport.id, statId, taken]);
 
   const choose = (p: CatalogPlayer) => { onPick(p); setQ(""); };
 
@@ -207,7 +210,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
                 <button key={p.name} className={i === cursor ? "cursor" : ""}
                         onMouseEnter={() => setCursor(i)} onClick={() => choose(p)}>
                   <span className="who">
-                    <Face player={p} size="list" />
+                    <Face player={p} sport={sport} size="list" />
                     <span>{p.name}</span>
                   </span>
                   <span className="tag">#{p.rank} DEL RANKING</span>
@@ -234,6 +237,7 @@ const STING_LABEL: Record<Sting, string> = {
 };
 
 export default function App() {
+  const [sportId, setSportId] = useState(DEFAULT_SPORT_ID);
   const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
   const [picks, setPicks] = useState<(RosterPick | null)[]>(() => Array(SLOTS).fill(null));
   const [shown, setShown] = useState(0);
@@ -250,7 +254,7 @@ export default function App() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchChallenge(null);
+        const data = await fetchChallenge(DEFAULT_SPORT_ID, null);
         if (!cancelled) setChallenge(data);
       } catch {
         if (!cancelled) setLoadError(true);
@@ -289,7 +293,12 @@ export default function App() {
       const res = await fetch("/api/reveal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stat: challenge.stat.id, names, target: challenge.target }),
+        body: JSON.stringify({
+          sport: challenge.sport.id,
+          stat: challenge.stat.id,
+          names,
+          target: challenge.target,
+        }),
       });
       if (!res.ok) throw new Error("reveal");
       const data = await res.json() as { values: number[] } & RoundScore;
@@ -328,7 +337,26 @@ export default function App() {
     setResult(null);
     setLocking(false);
     try {
-      const data = await fetchChallenge(challenge.stat.id);
+      const data = await fetchChallenge(challenge.sport.id, challenge.stat.id);
+      setChallenge(data);
+    } catch {
+      setLoadError(true);
+    }
+  };
+
+  const selectSport = async (id: string) => {
+    if (id === sportId || locking || phase === "revealing") return;
+    timers.current.forEach(clearTimeout);
+    setSportId(id);
+    setPicks(Array(SLOTS).fill(null));
+    setShown(0);
+    setPhase("picking");
+    setSting(null);
+    setResult(null);
+    setLocking(false);
+    setChallenge(null);
+    try {
+      const data = await fetchChallenge(id, null);
       setChallenge(data);
     } catch {
       setLoadError(true);
@@ -338,7 +366,7 @@ export default function App() {
   const retryBoot = async () => {
     setLoadError(false);
     try {
-      const data = await fetchChallenge(null);
+      const data = await fetchChallenge(sportId, null);
       setChallenge(data);
     } catch {
       setLoadError(true);
@@ -379,7 +407,22 @@ export default function App() {
       <header className="hud">
         <div>
           <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
-          <div className="hud-meta">NBA · Carrera · {fmtDate(challenge.updatedAt)}</div>
+          <nav className="sports" aria-label="Catálogo">
+            {SPORTS.map(s => (
+              <button
+                key={s.id}
+                type="button"
+                className={"sport-tab" + (s.id === challenge.sport.id ? " on" : "")}
+                aria-pressed={s.id === challenge.sport.id}
+                disabled={SPORTS.length === 1 || locking || phase === "revealing"}
+                onClick={() => selectSport(s.id)}
+              >
+                <img src={s.logo} alt="" width={20} height={20} />
+                <span>{s.name}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
         </div>
         <div className="hud-stats">
           <div className="hud-stat">Récord<b>{stats.best}</b></div>
@@ -414,12 +457,12 @@ export default function App() {
       </div>
       <div className="slots">
         {picks.map((p, i) => (
-          <Slot key={i} n={i} pick={p} revealed={i < shown} onRemove={() => remove(i)} />
+          <Slot key={i} n={i} pick={p} sport={challenge.sport} revealed={i < shown} onRemove={() => remove(i)} />
         ))}
       </div>
 
       <div className="draft">
-        <Picker statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
+        <Picker sport={challenge.sport} statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
         {phase === "done"
           ? <button className="btn primary" onClick={nextRound}>Siguiente</button>
           : <button

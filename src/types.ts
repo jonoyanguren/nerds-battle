@@ -1,32 +1,40 @@
-export type StatId = "pts" | "trb" | "ast" | "blk" | "stl" | "fg3";
+export type Sport = {
+  id: string;
+  name: string;
+  scope: string;
+  logo: string;
+  photoUrl: string;
+};
 
-export const STAT_IDS: StatId[] = ["pts", "trb", "ast", "blk", "stl", "fg3"];
-
-export function isStatId(value: string): value is StatId {
-  return (STAT_IDS as string[]).includes(value);
-}
+export type Stat = {
+  id: string;
+  label: string;
+  note: string;
+};
 
 export type Player = {
   name: string;
   value: number;
-  nbaId: number;
+  photoId: string;
 };
 
 export type CatalogPlayer = {
   name: string;
-  nbaId: number;
+  photoId: string;
   rank: number;
 };
 
 export type RosterPick = CatalogPlayer & { value?: number };
 
-export type Stat = {
-  id: StatId;
-  label: string;
-  note: string;
+export type Catalog = {
+  sport: Sport;
+  stats: Stat[];
+  players: Record<string, Player[]>;
+  updatedAt: string;
 };
 
 export type Challenge = {
+  sport: Sport;
   stat: Stat;
   target: number;
 };
@@ -56,3 +64,7 @@ export type LocalStats = {
 };
 
 export type Phase = "picking" | "revealing" | "done";
+
+export function hasStat(catalog: Catalog, statId: string): boolean {
+  return Boolean(catalog.stats.some(s => s.id === statId) && catalog.players[statId]);
+}

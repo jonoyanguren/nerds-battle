@@ -2,8 +2,9 @@
 
 ## La ronda
 
-Estadística al azar (nunca repite la anterior) → objetivo generado → 5 huecos →
-revelado → puntuación → siguiente.
+Estadística al azar de un **catálogo** (deporte) → objetivo generado → 5 huecos →
+revelado → puntuación → siguiente. El catálogo (NBA, luego fútbol…) trae nombre,
+logo y fotos; el motor no sabe qué liga es.
 
 ## Generación del objetivo
 

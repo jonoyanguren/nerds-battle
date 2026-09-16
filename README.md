@@ -20,7 +20,8 @@ npm run dev
 ```
 
 Datos: `npm run sync` tira de NBA Stats (top 2000 de carrera + ids para fotos)
-y pisa `src/data.generated.json`. Cron semanal en GitHub Actions (lunes 06:00 UTC)
+y pisa `src/data.generated.json`. Cada deporte es un catálogo (`src/catalogs/`)
+con nombre, logo y plantilla de foto. Cron semanal en GitHub Actions (lunes 06:00 UTC)
 o a mano. Si el sync falla, se quedan los datos de la semana anterior.
 
 ## Stack previsto
@@ -33,7 +34,8 @@ o a mano. Si el sync falla, se quedan los datos de la semana anterior.
 | Ranking | no hay | tabla `scores` + página de clasificación |
 
 El motor del juego (`makeChallenge`, `scoreRound`) son funciones puras sin React,
-en `src/engine.ts`. Al migrar solo cambia de dónde salen los datos.
+en `src/engine.ts`. Reciben un catálogo `{ sport, stats, players }`. La NBA es
+el primer deporte; otro catálogo no cambia el motor.
 
 ## Cómo funciona una ronda
 

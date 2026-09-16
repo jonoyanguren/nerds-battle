@@ -1,14 +1,15 @@
-import generated from "./data.generated.json";
-import type { Player, Stat, StatId } from "./types";
+import type { Sport, Stat } from "../../types";
 
-/* ============================================================
-   1. DATOS  —  el cron (npm run sync) pisa data.generated.json.
-   El resto del juego consume PLAYERS[statId] = [{name, value, nbaId}].
-   ============================================================ */
+/** Meta ciega: el cliente puede verla. Las cifras viven en data.generated.json. */
+export const NBA_SPORT: Sport = {
+  id: "nba",
+  name: "NBA",
+  scope: "Carrera",
+  logo: "/sports/nba.svg",
+  photoUrl: "https://cdn.nba.com/headshots/nba/latest/260x190/{id}.png",
+};
 
-export const DATA_UPDATED_AT: string = generated.updatedAt;
-
-export const STATS: Stat[] = [
+export const NBA_STATS: Stat[] = [
   { id: "pts", label: "Puntos", note: "Puntos totales anotados en temporada regular." },
   { id: "trb", label: "Rebotes", note: "Rebotes totales, ofensivos y defensivos." },
   { id: "ast", label: "Asistencias", note: "Asistencias totales en temporada regular." },
@@ -16,5 +17,3 @@ export const STATS: Stat[] = [
   { id: "stl", label: "Robos", note: "Balones robados desde que la NBA los contabiliza (1973-74)." },
   { id: "fg3", label: "Triples", note: "Triples anotados desde que existe la línea (1979-80)." },
 ];
-
-export const PLAYERS = generated.players as Record<StatId, Player[]>;

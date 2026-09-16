@@ -1,5 +1,5 @@
-export function headshotUrl(nbaId: number) {
-  return `https://cdn.nba.com/headshots/nba/latest/260x190/${nbaId}.png`;
+export function photoUrl(template: string, photoId: string) {
+  return template.replaceAll("{id}", encodeURIComponent(photoId));
 }
 
 export function initials(name: string) {

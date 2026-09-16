@@ -16,17 +16,19 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 ## Dónde está cada cosa
 
 - `src/types.ts` — contrato de datos y tipos del motor.
-- `src/data.ts` — STATS + PLAYERS. Lee `src/data.generated.json`. Solo
-  el servidor (rutas API + motor).
-- `src/data.generated.json` — top 2000 + `nbaId`. Lo pisa `npm run sync`
+- `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto). Ciego, cliente OK.
+- `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
+- `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
+- `src/data.generated.json` — top ~3000 NBA + `nbaId`. Lo pisa `npm run sync`
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
-- `src/engine.ts` — motor: `makeChallenge` y `scoreRound`. Funciones puras,
-  sin React. Consumen `PLAYERS[statId] = [{name, value, nbaId}]`. No importar
-  desde el cliente.
+- `src/engine.ts` — motor: `makeChallenge(catalog, prevStatId)` y `scoreRound`.
+  Funciones puras, sin React. El catálogo es `{ sport, stats, players[statId] }`.
+  No importar desde el cliente.
 - `src/format.ts`, `src/photos.ts`, `src/storage.ts` — helpers ciegos (cliente).
-- `src/App.tsx` — UI (client component). Habla con `/api/players`,
+- `src/App.tsx` — UI (client component). Habla con `/api/sports`, `/api/players`,
   `/api/challenge` y `/api/reveal`. No ve `value` hasta revelar.
 - `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
+- `public/sports/` — logos de catálogo.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
 - `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
 - `README.md` — visión general y roadmap.
@@ -35,9 +37,10 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 
 - **El motor antes que la UI.** `makeChallenge` y `scoreRound` son funciones
   puras sin React. Cualquier regla nueva del juego va ahí, no en un componente.
-- **Los datos son una dependencia, no parte del juego.** El motor solo consume
-  `PLAYERS[statId] = [{name, value, nbaId}]`. Cuando se migre a base de datos, esa
-  forma no cambia.
+- **Los datos son una dependencia, no parte del juego.** El motor consume un
+  `Catalog`. La NBA es el primer catálogo, no el juego. Un deporte nuevo:
+  `sport.ts` (meta + stats) + loader de cifras + logo en `public/sports/` +
+  una línea en `registry.ts` y `catalogs/load.ts`.
 - **Nada de dependencias nuevas sin motivo.** Ahora: Next.js + React + TS.
   Siguiente: Prisma + Auth.js. Si algo pide otra librería, plantéalo.
 - **Un cambio, una pregunta respondida.** Este proyecto existe para saber si el
@@ -46,8 +49,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 ## Estado actual y lo siguiente
 
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
-API ciega: el cliente no lleva cifras. Orden en `docs/tareas.md`: Postgres →
-Google → cron a Postgres → 2 jugadores → colegas (M0).
+API ciega + catálogos: el cliente no lleva cifras. NBA es el primer deporte.
+Siguiente catálogo = datos, no un refactor. Orden en `docs/tareas.md`.
 
 ## Idioma
 

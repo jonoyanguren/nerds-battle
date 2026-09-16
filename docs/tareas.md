@@ -15,10 +15,11 @@ Cron semanal (Vercel cron o el script de ahora).
 
 ```
 buscador  →  {name, rank, photo}    nunca value
-reto      →  {id, stat, target, updatedAt}
+reto      →  {sport, stat, target, updatedAt}
+deportes  →  {id, name, scope, logo}
 revelar   →  {values[], total, points, verdict}
 login     →  Google → users
-cron      →  pisa players + updated_at + nba_id
+cron      →  pisa players + updated_at + photo_id
 ```
 
 ## Orden
@@ -35,7 +36,7 @@ Portar, no rediseñar. Sigue leyendo `data.generated.json`.
 
 - [ ] Prisma + tablas:
       `users` (id, email, name, image, googleId)
-      `players` (id, name, league, stat, value, rank, nbaId)
+      `players` (id, name, league, stat, value, rank, photoId)
       `meta` (updated_at)
 - [ ] Seed desde `src/data.generated.json`
 - [ ] La UI lee `updated_at`
@@ -84,12 +85,16 @@ Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
 
 ## Aún no
 
-Más ligas, F1, tenis, ranking global, reto diario, mostrar cifras
+Más catálogos (fútbol, Pokémon…), ranking global, reto diario, mostrar cifras
 antes de tiempo, ordenar el buscador por stat.
+
+Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
+`public/sports/`, registrar en `registry.ts` y `catalogs/load.ts`.
 
 ## Decisiones al llegar
 
 | Cuándo | Qué |
 |---|---|
 | M4 | El cliente manda `target` al revelar; no hay tabla `challenges` (serverless). |
+| catálogos | La NBA es un `Sport` (nombre, logo, fotos). El motor recibe un `Catalog`. |
 | M6 | ¿Mismo dispositivo o dos móviles? |

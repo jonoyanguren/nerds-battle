@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { PLAYERS } from "@/data";
+import { getCatalog } from "@/catalogs/load";
+import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
 import { SLOTS, scoreRound } from "@/engine";
-import { isStatId } from "@/types";
+import { hasStat } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +11,21 @@ export async function POST(request: Request) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "body" }, { status: 400 });
   }
-  const { stat, names, target } = body as {
+  const { sport, stat, names, target } = body as {
+    sport?: unknown;
     stat?: unknown;
     names?: unknown;
     target?: unknown;
   };
-  if (typeof stat !== "string" || !isStatId(stat) || typeof target !== "number" || !Number.isFinite(target)) {
+  const sportId = typeof sport === "string" ? sport : DEFAULT_SPORT_ID;
+  const catalog = getCatalog(sportId);
+  if (
+    !catalog ||
+    typeof stat !== "string" ||
+    !hasStat(catalog, stat) ||
+    typeof target !== "number" ||
+    !Number.isFinite(target)
+  ) {
     return NextResponse.json({ error: "fields" }, { status: 400 });
   }
   if (!Array.isArray(names) || names.length !== SLOTS || names.some(n => typeof n !== "string")) {
@@ -25,7 +35,7 @@ export async function POST(request: Request) {
   if (new Set(typedNames).size !== SLOTS) {
     return NextResponse.json({ error: "duplicate" }, { status: 400 });
   }
-  const list = PLAYERS[stat];
+  const list = catalog.players[stat];
   const values: number[] = [];
   for (const name of typedNames) {
     const player = list.find(p => p.name === name);
