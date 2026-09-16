@@ -1,24 +1,11 @@
 import { PLAYERS, STATS } from "./data";
-import type { Challenge, LocalStats, RoundScore, StatId, Verdict } from "./types";
+import { SLOTS } from "./format";
+import type { Challenge, RoundScore, StatId, Verdict } from "./types";
 
-/* ============================================================
-   2. MOTOR  —  funciones puras, sin React. Aquí vive el juego.
-   ============================================================ */
-export const SLOTS = 5;
+export { SLOTS } from "./format";
+
 /** El buscador ve todo el pool; el objetivo se siembra solo del tramo alto. */
 export const SEED_POOL = 150;
-
-export const fold = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-export const fmt = (n: number) => n.toLocaleString("es-ES");
-
-export const fmtDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 
 /** Redondea a 3 cifras significativas: 46.291 -> 46.300 */
 export function roundNice(n: number) {
@@ -53,35 +40,3 @@ export function scoreRound(total: number, target: number): RoundScore {
   const verdict = VERDICTS.find(v => err <= v.max) ?? VERDICTS[VERDICTS.length - 1];
   return { diff, err, points, verdict };
 }
-
-/* --- récord local, best-effort --- */
-export const STORE_KEY = "nerds-battle-v1";
-
-const EMPTY_STATS: LocalStats = { rounds: 0, best: 0, sum: 0 };
-
-function isLocalStats(value: unknown): value is LocalStats {
-  if (!value || typeof value !== "object") return false;
-  const o = value as Record<string, unknown>;
-  return (
-    typeof o.rounds === "number" &&
-    typeof o.best === "number" &&
-    typeof o.sum === "number"
-  );
-}
-
-export const loadStats = (): LocalStats => {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORE_KEY) ?? "null");
-    return isLocalStats(raw) ? raw : EMPTY_STATS;
-  } catch {
-    return EMPTY_STATS;
-  }
-};
-
-export const saveStats = (s: LocalStats) => {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(s));
-  } catch {
-    /* ignore quota / private mode */
-  }
-};

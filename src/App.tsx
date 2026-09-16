@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
-import { DATA_UPDATED_AT, PLAYERS, headshotUrl, initials } from "./data";
-import {
-  SLOTS,
-  fold,
-  fmt,
-  fmtDate,
-  makeChallenge,
-  scoreRound,
-  loadStats,
-  saveStats,
-} from "./engine";
-import type { Challenge, LocalStats, Phase, Player, StatId } from "./types";
+import { SLOTS, fold, fmt, fmtDate } from "./format";
+import { headshotUrl, initials } from "./photos";
+import { loadStats, saveStats } from "./storage";
+import type {
+  CatalogPlayer,
+  ChallengePayload,
+  LocalStats,
+  Phase,
+  RosterPick,
+  RoundScore,
+  StatId,
+} from "./types";
 
 const REVEAL_STEP_MS = 720;
 const COUNT_SLOT_MS = 1400;
@@ -69,14 +69,9 @@ function SlotValue({ value }: { value: number }) {
   return <div className="slot-value">{fmt(n)}</div>;
 }
 
-type SlotProps = {
-  n: number;
-  pick: Player | null;
-  revealed: boolean;
-  onRemove: () => void;
-};
+type FacePlayer = { name: string; nbaId: number };
 
-function Face({ player, size = "slot" }: { player: Player; size?: "slot" | "list" }) {
+function Face({ player, size = "slot" }: { player: FacePlayer; size?: "slot" | "list" }) {
   const [broken, setBroken] = useState(false);
   useEffect(() => { setBroken(false); }, [player.nbaId]);
   if (broken) {
@@ -92,6 +87,13 @@ function Face({ player, size = "slot" }: { player: Player; size?: "slot" | "list
   );
 }
 
+type SlotProps = {
+  n: number;
+  pick: RosterPick | null;
+  revealed: boolean;
+  onRemove: () => void;
+};
+
 function Slot({ n, pick, revealed, onRemove }: SlotProps) {
   const cls = "slot" + (pick ? " filled" : "") + (revealed ? " revealed" : "");
   return (
@@ -101,7 +103,7 @@ function Slot({ n, pick, revealed, onRemove }: SlotProps) {
       {pick
         ? <div className="slot-name">{pick.name}</div>
         : <div className="slot-empty">vacío</div>}
-      {revealed && pick
+      {revealed && pick && pick.value != null
         ? <SlotValue key={pick.name} value={pick.value} />
         : pick
           ? <button className="slot-x" onClick={onRemove}>QUITAR</button>
@@ -110,33 +112,72 @@ function Slot({ n, pick, revealed, onRemove }: SlotProps) {
   );
 }
 
+async function fetchChallenge(prevStatId: StatId | null): Promise<ChallengePayload> {
+  const res = await fetch("/api/challenge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prevStatId }),
+  });
+  if (!res.ok) throw new Error("challenge");
+  return res.json() as Promise<ChallengePayload>;
+}
+
 type PickerProps = {
   statId: StatId;
-  picks: (Player | null)[];
-  onPick: (player: Player) => void;
+  picks: (RosterPick | null)[];
+  onPick: (player: CatalogPlayer) => void;
   disabled: boolean;
 };
 
 function Picker({ statId, picks, onPick, disabled }: PickerProps) {
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
+  const [hits, setHits] = useState<CatalogPlayer[]>([]);
+  const [searching, setSearching] = useState(false);
   const taken = useMemo(
-    () => new Set(picks.filter((p): p is Player => p !== null).map(p => p.name)),
+    () => new Set(picks.filter((p): p is RosterPick => p !== null).map(p => p.name)),
     [picks]
   );
 
-  const hits = useMemo(() => {
+  useEffect(() => {
+    setQ("");
+    setHits([]);
+  }, [statId]);
+
+  useEffect(() => { setCursor(0); }, [q, hits]);
+
+  useEffect(() => {
     const needle = fold(q.trim());
-    if (!needle) return [];
-    return PLAYERS[statId]
-      .filter(p => !taken.has(p.name) && fold(p.name).includes(needle))
-      .slice(0, 40);
+    if (!needle) {
+      setHits([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const ac = new AbortController();
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/players?stat=${encodeURIComponent(statId)}&q=${encodeURIComponent(q.trim())}`,
+          { signal: ac.signal }
+        );
+        if (!res.ok) throw new Error("players");
+        const data = await res.json() as { players: CatalogPlayer[] };
+        setHits(data.players.filter(p => !taken.has(p.name)));
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setHits([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 180);
+    return () => {
+      clearTimeout(t);
+      ac.abort();
+    };
   }, [q, statId, taken]);
 
-  useEffect(() => { setCursor(0); }, [q]);
-  useEffect(() => { setQ(""); }, [statId]);
-
-  const choose = (p: Player) => { onPick(p); setQ(""); };
+  const choose = (p: CatalogPlayer) => { onPick(p); setQ(""); };
 
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!hits.length) return;
@@ -159,7 +200,9 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
       {q.trim() && !disabled && (
         <div className="results">
           {hits.length === 0
-            ? <div className="no-hit">Ningún jugador del ranking coincide con «{q}».</div>
+            ? <div className="no-hit">
+                {searching ? "Buscando…" : `Ningún jugador del ranking coincide con «${q}».`}
+              </div>
             : hits.map((p, i) => (
                 <button key={p.name} className={i === cursor ? "cursor" : ""}
                         onMouseEnter={() => setCursor(i)} onClick={() => choose(p)}>
@@ -167,7 +210,7 @@ function Picker({ statId, picks, onPick, disabled }: PickerProps) {
                     <Face player={p} size="list" />
                     <span>{p.name}</span>
                   </span>
-                  <span className="tag">#{PLAYERS[statId].indexOf(p) + 1} DEL RANKING</span>
+                  <span className="tag">#{p.rank} DEL RANKING</span>
                 </button>
               ))}
         </div>
@@ -191,26 +234,39 @@ const STING_LABEL: Record<Sting, string> = {
 };
 
 export default function App() {
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [picks, setPicks] = useState<(Player | null)[]>(() => Array(SLOTS).fill(null));
+  const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
+  const [picks, setPicks] = useState<(RosterPick | null)[]>(() => Array(SLOTS).fill(null));
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("picking");
   const [stats, setStats] = useState<LocalStats>({ rounds: 0, best: 0, sum: 0 });
   const [sting, setSting] = useState<Sting | null>(null);
+  const [result, setResult] = useState<RoundScore | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [locking, setLocking] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
     setStats(loadStats());
-    setChallenge(makeChallenge(null));
-    return () => timers.current.forEach(clearTimeout);
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchChallenge(null);
+        if (!cancelled) setChallenge(data);
+      } catch {
+        if (!cancelled) setLoadError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      timers.current.forEach(clearTimeout);
+    };
   }, []);
 
   const filled = picks.filter(Boolean).length;
-  const total = picks.reduce((a, p, i) => a + (p && i < shown ? p.value : 0), 0);
-  const finalTotal = picks.reduce((a, p) => a + (p ? p.value : 0), 0);
-  const result = challenge && phase === "done" ? scoreRound(finalTotal, challenge.target) : null;
+  const total = picks.reduce((a, p, i) => a + (p && i < shown && p.value != null ? p.value : 0), 0);
+  const finalTotal = picks.reduce((a, p) => a + (p?.value ?? 0), 0);
 
-  const place = (p: Player) => {
+  const place = (p: CatalogPlayer) => {
     const i = picks.findIndex(x => !x);
     if (i === -1) return;
     const next = [...picks];
@@ -224,34 +280,69 @@ export default function App() {
     setPicks(next);
   };
 
-  const reveal = () => {
-    setPhase("revealing");
-    timers.current = picks.map((_, i) =>
-      window.setTimeout(() => {
-        setShown(i + 1);
-        if (i === SLOTS - 1) {
-          setPhase("done");
-          const r = scoreRound(finalTotal, challenge!.target);
-          const grade = stingOf(r.err);
-          setSting(grade);
-          timers.current.push(window.setTimeout(() => setSting(null), 2200));
-          setStats(s => {
-            const next = { rounds: s.rounds + 1, best: Math.max(s.best, r.points), sum: s.sum + r.points };
-            saveStats(next);
-            return next;
-          });
-        }
-      }, REVEAL_STEP_MS * (i + 1))
-    );
+  const reveal = async () => {
+    if (!challenge || locking || phase !== "picking") return;
+    const names = picks.map(p => p?.name);
+    if (names.some(n => !n)) return;
+    setLocking(true);
+    try {
+      const res = await fetch("/api/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stat: challenge.stat.id, names, target: challenge.target }),
+      });
+      if (!res.ok) throw new Error("reveal");
+      const data = await res.json() as { values: number[] } & RoundScore;
+      const next = picks.map((p, i) => (p ? { ...p, value: data.values[i] } : null));
+      setPicks(next);
+      setResult(data);
+      setPhase("revealing");
+      timers.current = next.map((_, i) =>
+        window.setTimeout(() => {
+          setShown(i + 1);
+          if (i === SLOTS - 1) {
+            setPhase("done");
+            const grade = stingOf(data.err);
+            setSting(grade);
+            timers.current.push(window.setTimeout(() => setSting(null), 2200));
+            setStats(s => {
+              const ns = { rounds: s.rounds + 1, best: Math.max(s.best, data.points), sum: s.sum + data.points };
+              saveStats(ns);
+              return ns;
+            });
+          }
+        }, REVEAL_STEP_MS * (i + 1))
+      );
+    } catch {
+      setLocking(false);
+    }
   };
 
-  const nextRound = () => {
+  const nextRound = async () => {
+    if (!challenge) return;
     timers.current.forEach(clearTimeout);
-    setChallenge(makeChallenge(challenge!.stat.id));
     setPicks(Array(SLOTS).fill(null));
     setShown(0);
     setPhase("picking");
     setSting(null);
+    setResult(null);
+    setLocking(false);
+    try {
+      const data = await fetchChallenge(challenge.stat.id);
+      setChallenge(data);
+    } catch {
+      setLoadError(true);
+    }
+  };
+
+  const retryBoot = async () => {
+    setLoadError(false);
+    try {
+      const data = await fetchChallenge(null);
+      setChallenge(data);
+    } catch {
+      setLoadError(true);
+    }
   };
 
   const liveSum = useCountUp(total, COUNT_SUM_MS);
@@ -263,7 +354,16 @@ export default function App() {
   const avg = stats.rounds ? Math.round(stats.sum / stats.rounds) : 0;
   const phaseLabel = phase === "picking" ? "Fichajes" : phase === "revealing" ? "Revelando" : "Final";
 
-  const grade = result ? stingOf(result.err) : null;
+  const grade = result && phase === "done" ? stingOf(result.err) : null;
+
+  if (loadError) {
+    return (
+      <div className="arena">
+        <p className="credit">No se pudo cargar el reto.</p>
+        <button className="btn primary" onClick={retryBoot}>Reintentar</button>
+      </div>
+    );
+  }
 
   if (!challenge) return <div className="arena" aria-busy="true" />;
 
@@ -279,7 +379,7 @@ export default function App() {
       <header className="hud">
         <div>
           <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
-          <div className="hud-meta">NBA · Carrera · {fmtDate(DATA_UPDATED_AT)}</div>
+          <div className="hud-meta">NBA · Carrera · {fmtDate(challenge.updatedAt)}</div>
         </div>
         <div className="hud-stats">
           <div className="hud-stat">Récord<b>{stats.best}</b></div>
@@ -322,13 +422,17 @@ export default function App() {
         <Picker statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
         {phase === "done"
           ? <button className="btn primary" onClick={nextRound}>Siguiente</button>
-          : <button className="btn primary" onClick={reveal} disabled={filled < SLOTS || phase !== "picking"}>
+          : <button
+              className="btn primary"
+              onClick={reveal}
+              disabled={filled < SLOTS || phase !== "picking" || locking}
+            >
               Fijar
             </button>}
       </div>
       {phase === "picking" && filled === SLOTS && <span className="hint">Plantilla lista. Fija.</span>}
 
-      {result && (
+      {result && phase === "done" && (
         <section className={`result result-${grade}`}>
           <div className="result-top">
             <div className="result-cell">
@@ -357,7 +461,7 @@ export default function App() {
       )}
 
       <p className="credit">
-        {PLAYERS[challenge.stat.id].length.toLocaleString("es-ES")} jugadores · act. {fmtDate(DATA_UPDATED_AT)}
+        {challenge.poolSize.toLocaleString("es-ES")} jugadores · act. {fmtDate(challenge.updatedAt)}
       </p>
     </div>
   );

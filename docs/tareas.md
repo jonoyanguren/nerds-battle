@@ -52,10 +52,10 @@ Auth.js. Lo mínimo: entrar / salir. Sin página de perfil.
 
 El bundle deja de llevar cifras.
 
-- [ ] `GET /api/players?stat=&q=` → nombre + rank + foto
-- [ ] `POST /api/challenge` → stat + target
-- [ ] `POST /api/reveal` → 5 nombres → cifras + `scoreRound`
-- [ ] Quitar `PLAYERS` del cliente
+- [x] `GET /api/players?stat=&q=` → nombre + rank + foto
+- [x] `POST /api/challenge` → stat + target
+- [x] `POST /api/reveal` → 5 nombres → cifras + `scoreRound`
+- [x] Quitar `PLAYERS` del cliente
 
 ### M5 · Cron a Postgres
 
@@ -91,5 +91,5 @@ antes de tiempo, ordenar el buscador por stat.
 
 | Cuándo | Qué |
 |---|---|
-| M4 | ¿El reto vive en memoria o en tabla `challenges`? |
+| M4 | El cliente manda `target` al revelar; no hay tabla `challenges` (serverless). |
 | M6 | ¿Mismo dispositivo o dos móviles? |

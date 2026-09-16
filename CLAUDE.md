@@ -16,13 +16,17 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 ## Dónde está cada cosa
 
 - `src/types.ts` — contrato de datos y tipos del motor.
-- `src/data.ts` — STATS + helpers de foto. Lee `src/data.generated.json`.
+- `src/data.ts` — STATS + PLAYERS. Lee `src/data.generated.json`. Solo
+  el servidor (rutas API + motor).
 - `src/data.generated.json` — top 2000 + `nbaId`. Lo pisa `npm run sync`
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
 - `src/engine.ts` — motor: `makeChallenge` y `scoreRound`. Funciones puras,
-  sin React. Consumen `PLAYERS[statId] = [{name, value, nbaId}]`.
-- `src/App.tsx` — UI (client component).
-- `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`).
+  sin React. Consumen `PLAYERS[statId] = [{name, value, nbaId}]`. No importar
+  desde el cliente.
+- `src/format.ts`, `src/photos.ts`, `src/storage.ts` — helpers ciegos (cliente).
+- `src/App.tsx` — UI (client component). Habla con `/api/players`,
+  `/api/challenge` y `/api/reveal`. No ve `value` hasta revelar.
+- `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
 - `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
 - `README.md` — visión general y roadmap.
@@ -42,7 +46,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 ## Estado actual y lo siguiente
 
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
-El bundle aún lleva cifras. Orden: API ciega → Google/Postgres si hace falta → colegas (M0).
+API ciega: el cliente no lleva cifras. Orden en `docs/tareas.md`: Postgres →
+Google → cron a Postgres → 2 jugadores → colegas (M0).
 
 ## Idioma
 
