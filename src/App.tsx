@@ -294,9 +294,17 @@ export default function App() {
           <h2 className="stat-name">{challenge.stat.label}</h2>
           <p className="stat-note">Elige cinco. Las cifras salen al final.</p>
         </div>
-        <div className="target">
-          <span>Objetivo</span>
-          <b>{fmt(challenge.target)}</b>
+        <div className="targets">
+          {shown > 0 && (
+            <div className="target target-sum">
+              <span>Suma</span>
+              <b>{fmt(liveSum)}</b>
+            </div>
+          )}
+          <div className="target">
+            <span>Objetivo</span>
+            <b>{fmt(challenge.target)}</b>
+          </div>
         </div>
       </section>
 
@@ -319,7 +327,6 @@ export default function App() {
             </button>}
       </div>
       {phase === "picking" && filled === SLOTS && <span className="hint">Plantilla lista. Fija.</span>}
-      {phase === "revealing" && <span className="hint">Suma {fmt(liveSum)}</span>}
 
       {result && (
         <section className={`result result-${grade}`}>

@@ -84,11 +84,13 @@ body{
 }
 .stat-name{font-family:var(--display);font-size:clamp(28px,5.5vw,44px);line-height:.9;margin:0 0 6px}
 .stat-note{color:var(--muted);font-size:12px;max-width:42ch;margin:0}
-.target{text-align:right;position:relative;z-index:1}
+.targets{display:flex;gap:clamp(20px,4vw,40px);align-items:end;position:relative;z-index:1}
+.target{text-align:right}
 .target span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
   text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .target b{font-family:var(--display);font-size:clamp(48px,11vw,84px);line-height:.85;font-weight:400;
   color:var(--accent);font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,122,47,.25)}
+.target-sum b{color:var(--ink);text-shadow:none}
 
 /* --- plantilla --- */
 .roster-label{
@@ -241,7 +243,7 @@ body{
 @media (max-width:720px){
   #root{padding:12px 12px 20px;gap:12px}
   .jumbo{grid-template-columns:1fr}
-  .target{text-align:left}
+  .targets,.target{text-align:left}
   .slots{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
   .slot{min-height:150px}
   .face-slot,.face-empty{height:72px}
