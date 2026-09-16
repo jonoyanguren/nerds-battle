@@ -41,12 +41,26 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 
 ## Estado actual y lo siguiente
 
-Next.js jugable (`npm run dev`). El enlace no urge. Orden en
-`docs/tareas.md`: Postgres → Google → API ciega → 2 jugadores → deploy
-→ colegas (M0).
+Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
+El bundle aún lleva cifras. Orden: API ciega → Google/Postgres si hace falta → colegas (M0).
 
 ## Idioma
 
 Interfaz y documentación en español. Nombres de jugadores tal cual (con
 acentos: Jokić, Dončić); el buscador ya normaliza para que "jokic" encuentre a
 Jokić. Código y nombres de variables en inglés.
+
+## Deploy Configuration (configured by /setup-deploy)
+- Platform: Vercel
+- Production URL: https://nerds-battle-jonoyangurens-projects.vercel.app
+- Deploy workflow: auto-deploy on push to master
+- Deploy status command: HTTP health check
+- Merge method: merge
+- Project type: web app
+- Post-deploy health check: https://nerds-battle-jonoyangurens-projects.vercel.app
+
+### Custom deploy hooks
+- Pre-merge: npm run build
+- Deploy trigger: automatic on push to master (GitHub → Vercel)
+- Deploy status: poll production URL
+- Health check: https://nerds-battle-jonoyangurens-projects.vercel.app

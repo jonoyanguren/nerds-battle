@@ -10,7 +10,8 @@ cifras** y al final descubres cuánto te has acercado.
 ## Estado
 
 **Prototipo v0.1 jugable.** Un jugador, 6 estadísticas NBA, ~2000 jugadores por
-estadística. Sin backend, sin cuentas, sin ranking.
+estadística. Sin backend, sin cuentas, sin ranking. En Vercel:
+https://nerds-battle-jonoyangurens-projects.vercel.app
 
 ```bash
 npm install
@@ -56,11 +57,11 @@ Categorías: puntos, rebotes, asistencias, tapones, robos, triples.
 
 El tablero de trabajo está en [`docs/tareas.md`](docs/tareas.md).
 
-- [ ] M1 · Pasar a Next.js (mismo juego)
+- [x] M1 · Pasar a Next.js (mismo juego)
 - [ ] M2 · Postgres + semilla
 - [ ] M3 · Login con Google (Auth.js)
 - [ ] M4 · API ciega
 - [ ] M5 · Cron → Postgres
 - [ ] M6 · 2 jugadores
-- [ ] M7 · Deploy
+- [x] M7 · Deploy
 - [ ] M0 · Playtest con colegas y ajustar la curva

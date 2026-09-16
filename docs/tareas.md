@@ -72,8 +72,8 @@ Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
 
 ### M7 · URL
 
-- [ ] Deploy Vercel
-- [ ] Comprobar en el móvil: login Google, una ronda
+- [x] Deploy Vercel
+- [ ] Comprobar en el móvil: una ronda
 
 ## Al final — M0 · Colegas
 
