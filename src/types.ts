@@ -94,6 +94,19 @@ export type ProfilePayload = LocalStats & {
 
 export type Phase = "picking" | "revealing" | "done";
 
+/** Un jugador, o dos pasándose el mismo móvil (`docs/tareas.md`, M6). */
+export type Mode = "solo" | "duel";
+
+/** Quién gana el duelo. `null` es empate. */
+export type DuelWinner = 1 | 2 | null;
+
+/** Lo que hizo cada jugador en un duelo, ya revelado. */
+export type DuelSide = {
+  picks: RosterPick[];
+  total: number;
+  score: RoundScore;
+};
+
 export function hasStat(catalog: Catalog, statId: string): boolean {
   return Boolean(catalog.stats.some(s => s.id === statId) && catalog.players[statId]);
 }
