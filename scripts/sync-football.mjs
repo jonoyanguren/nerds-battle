@@ -159,7 +159,7 @@ async function selecciones() {
     if (row.date && row.date > max) max = row.date;
   });
   log(`   ${r.rows.toLocaleString("es-ES")} goles · ${goles.size.toLocaleString("es-ES")} goleadores · ${min} → ${max}`);
-  return { SEL_gol: ranking(goles) };
+  return { stats: { SEL_gol: ranking(goles) }, hasta: max };
 }
 
 /** Goles, asistencias y partidos por competición de club. */
@@ -252,14 +252,17 @@ function informe(stats, etiquetas) {
 
 // ---------------------------------------------------------------------- main
 
-const sel = await selecciones();
+const { stats: sel, hasta: fechaSelecciones } = await selecciones();
 
 // Si la fuente de clubes no responde se sigue con lo que haya: el informe es
 // exploratorio y media foto vale más que ninguna. Pero se dice bien alto,
 // para que nadie confunda "no hay datos de liga" con "no existen".
-let clu = {}, nombreComp = new Map();
+let clu = {}, nombreComp = new Map(), fechaClubes = null;
 try {
-  ({ salida: clu, nombreComp } = await clubes());
+  const c = await clubes();
+  clu = c.salida;
+  nombreComp = c.nombreComp;
+  fechaClubes = c.fechas[1];
 } catch (e) {
   log(`\n⚠  No se pudo leer la fuente de clubes: ${e.message}`);
   log("   El informe sale solo con selecciones. Revisa la conexión y repite.");
@@ -288,8 +291,16 @@ for (const { id } of CATEGORIAS) {
   players[id] = lista.slice(0, TOP).map(([name, value]) => ({ name, value }));
 }
 
+// La fecha que se enseña es la del DATO, no la de la descarga. La NBA puede
+// poner el día en que corre el script porque baja cifras en vivo; aquí la
+// fuente de clubes es una foto fija de julio de 2026, y poner la fecha de hoy
+// sería decirle al jugador que las cifras están al día cuando no lo están.
+// Se coge la MÁS ANTIGUA de las dos: el catálogo solo está al día hasta donde
+// llega su fuente más rezagada. Poner la más reciente presumiría de una
+// frescura que la mitad de las categorías no tiene.
+const corte = [fechaSelecciones, fechaClubes].filter(Boolean).sort()[0];
 const out = {
-  updatedAt: new Date().toISOString().slice(0, 10),
+  updatedAt: corte ?? new Date().toISOString().slice(0, 10),
   source: "martj42/international_results + dcaribou/transfermarkt-datasets",
   players,
 };
