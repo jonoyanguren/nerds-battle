@@ -36,11 +36,32 @@ const TOP = 3000;
 const MIN_PLAYERS = 300;
 
 /**
- * Las categorías que entran en el catálogo, con su etiqueta.
- * Vacío a propósito: se rellena cuando veamos el informe. Elegir a ciegas es
- * como se acaba metiendo una estadística que castiga fallar por uno.
+ * Las categorías que entran, elegidas con el informe delante.
+ *
+ * Mezcla deliberada: tres de fama pura (goles y asistencias, donde los
+ * líderes son quienes todo el mundo espera) y dos de partidos jugados, donde
+ * los líderes NO son las estrellas —Parejo, Koke, Neuer— y hay que saber de
+ * fútbol y no solo reconocer nombres.
+ *
+ * Fuera quedaron: goles en Champions (fallar por uno cuesta 66 puntos, se
+ * hunde la ronda), las copas nacionales y las fases de clasificación. Y
+ * `FIWC_par`, partidos en el Mundial, donde todo el mundo tiene tres y el
+ * objetivo salía siempre 15.
  */
-const CATEGORIAS = [];
+const CATEGORIAS = [
+  { id: "ES1_gol", label: "Goles en LaLiga",
+    note: "Goles en Primera División española desde 2012." },
+  { id: "GB1_gol", label: "Goles en la Premier",
+    note: "Goles en la Premier League inglesa desde 2012." },
+  { id: "GB1_asi", label: "Asistencias en la Premier",
+    note: "Asistencias en la Premier League inglesa desde 2012." },
+  { id: "CL_par", label: "Partidos en Champions",
+    note: "Partidos jugados en la Liga de Campeones desde 2012." },
+  { id: "ES1_par", label: "Partidos en LaLiga",
+    note: "Partidos jugados en Primera División española desde 2012." },
+  { id: "SEL_gol", label: "Goles con su selección",
+    note: "Goles en partidos internacionales oficiales, desde 1916. No cuenta lo marcado con el club." },
+];
 
 const log = (...a) => console.log(...a);
 const add = (map, key, n = 1) => map.set(key, (map.get(key) || 0) + n);
@@ -284,11 +305,26 @@ if (CATEGORIAS.length === 0) {
 }
 
 const players = {};
+const faltan = [];
 for (const { id } of CATEGORIAS) {
   const lista = todas[id];
-  if (!lista) throw new Error(`La categoría ${id} no existe en los datos.`);
-  if (lista.length < MIN_PLAYERS) throw new Error(`${id}: solo ${lista.length} jugadores.`);
+  if (!lista || lista.length < MIN_PLAYERS) {
+    faltan.push(id);
+    continue;
+  }
   players[id] = lista.slice(0, TOP).map(([name, value]) => ({ name, value }));
+}
+
+// Si una fuente no respondió faltarán categorías. Se avisa alto y se sigue
+// solo si queda catálogo jugable: con una sola estadística el motor la
+// repetiría ronda tras ronda, porque no tiene otra a la que cambiar.
+if (faltan.length) {
+  log(`\n⚠  Faltan categorías: ${faltan.join(", ")}`);
+  log("   Suele ser que una de las dos fuentes no respondió. Repite la ejecución.");
+}
+if (Object.keys(players).length < 2) {
+  log("\nMenos de dos categorías: no se escribe nada. Un catálogo así repetiría siempre la misma.");
+  process.exit(1);
 }
 
 // La fecha que se enseña es la del DATO, no la de la descarga. La NBA puede
