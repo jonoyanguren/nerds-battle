@@ -37,14 +37,17 @@ completa (ver «Lo que se descartó»).
 
 ### Qué contiene
 
-| Categoría | Jugadores | Líder | Periodo |
-|---|---|---|---|
-| Goles en LaLiga | 1.420 | Messi 305 | 2012–2026 |
-| Goles en la Premier | 1.356 | Kane 213 | 2012–2026 |
-| Asistencias en la Premier | 1.440 | De Bruyne 122 | 2012–2026 |
-| Partidos en Champions | 3.816 → 3.000 | Lewandowski 138 | 2012–2026 |
-| Partidos en LaLiga | 2.642 | Parejo 473 | 2012–2026 |
-| Goles con su selección | 14.849 → 3.000 | Cristiano 124 | 1916–2026 |
+| Categoría | Jugadores | Líder | Cola | Periodo |
+|---|---|---|---|---|
+| Goles en LaLiga | 1.420 | Messi 305 | 1 | 2012–2026 |
+| Goles en la Premier | 1.356 | Kane 213 | 1 | 2012–2026 |
+| Asistencias en la Premier | 1.440 | De Bruyne 122 | 1 | 2012–2026 |
+| Partidos en Champions | 3.816 → 3.000 | Lewandowski 138 | 3 | 2012–2026 |
+| Partidos en LaLiga | 2.642 | Parejo 473 | 1 | 2012–2026 |
+| Goles con su selección | 14.849 → 3.000 | Cristiano 124 | 4 | 1916–2026 |
+
+La **cola** es el valor más bajo del catálogo, y es lo que marca cuánto se
+puede afinar el último hueco. Con cola 1 se clava el objetivo al milímetro.
 
 Las categorías se eligieron con el informe de `sync-football.mjs`, que mide lo
 que cuesta fallar por una unidad. Mezcla deliberada: tres de fama pura y dos de
@@ -72,10 +75,13 @@ se mueven nunca— así que envejece mejor que una clasificación, pero envejece
 con los ~870 de toda su carrera. Es la cifra correcta de esa categoría, pero
 choca con lo que la gente tiene en la cabeza.
 
-**4. Solo entran los 3.000 primeros**, igual que en la NBA. En goles de
-selección eso recorta la cola: de los 14.849 goleadores solo entran los de más
-goles, así que se pierden los miles con uno o dos, que son los que dejan afinar
-el último hueco al milímetro.
+**4. Solo entran los 3.000 primeros**, igual que en la NBA, y eso recorta la
+cola de las dos categorías que superan ese tamaño. En goles de selección, de
+14.849 goleadores solo entran los 3.000 con más goles: el último tiene **4**,
+no 1. Sobre un objetivo típico de 151 eso deja un ajuste mínimo del 2,6%, así
+que clavar el objetivo exacto es mucho más difícil ahí que en las categorías
+sin recortar. Si en el playtest se nota, hay dos salidas: subir el tope o
+sembrar el objetivo de un tramo más estrecho.
 
 **5. Sin fotos.** No hay un CDN abierto de futbolistas equivalente al de la
 NBA, así que `photoUrl` va vacío y `Face` enseña las iniciales.
