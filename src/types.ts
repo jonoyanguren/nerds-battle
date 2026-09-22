@@ -63,6 +63,35 @@ export type LocalStats = {
   sum: number;
 };
 
+export type ProfileStatBest = {
+  sport: string;
+  stat: string;
+  label: string;
+  points: number;
+};
+
+export type ProfileRound = {
+  id: string;
+  sport: string;
+  sportName: string;
+  stat: string;
+  statLabel: string;
+  target: number;
+  names: string[];
+  photoIds: string[];
+  values: number[];
+  total: number;
+  points: number;
+  err: number;
+  verdict: string;
+  createdAt: string;
+};
+
+export type ProfilePayload = LocalStats & {
+  bestByStat: ProfileStatBest[];
+  recent: ProfileRound[];
+};
+
 export type Phase = "picking" | "revealing" | "done";
 
 export function hasStat(catalog: Catalog, statId: string): boolean {

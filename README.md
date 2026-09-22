@@ -11,7 +11,8 @@ cifras** y al final descubres cuánto te has acercado.
 
 **Prototipo v0.1 jugable.** Un jugador, 6 estadísticas NBA, ~2000 jugadores por
 estadística. Las cifras viven en el servidor (`/api/challenge`, `/api/players`,
-`/api/reveal`). Sin cuentas, sin ranking. En Vercel:
+`/api/reveal`). Login Google opcional: con cuenta se guardan las rondas
+(pestaña Perfil). Sin ranking público. En Vercel:
 https://nerds-battle-jonoyangurens-projects.vercel.app
 
 ```bash
@@ -20,18 +21,20 @@ npm run dev
 ```
 
 Datos: `npm run sync` tira de NBA Stats (top 2000 de carrera + ids para fotos)
-y pisa `src/data.generated.json`. Cada deporte es un catálogo (`src/catalogs/`)
-con nombre, logo y plantilla de foto. Cron semanal en GitHub Actions (lunes 06:00 UTC)
-o a mano. Si el sync falla, se quedan los datos de la semana anterior.
+y pisa `src/data.generated.json`. Las APIs leen ese JSON en el servidor. Cada
+deporte es un catálogo (`src/catalogs/`) con nombre, logo y plantilla de foto.
+Cron semanal en GitHub Actions (lunes 06:00 UTC) o a mano. Si el sync falla,
+se quedan los datos de la semana anterior. Postgres guarda cuentas (Auth.js) y rondas del usuario.
+El ranking público espera.
 
 ## Stack previsto
 
 | Capa | Ahora | Destino |
 |---|---|---|
-| UI | Next.js (App Router) + React 19 | Auth.js + Postgres |
-| Datos | `src/data.generated.json` (`npm run sync`) | Postgres: `players(name, league, stat, value, nba_id)` |
+| UI | Next.js + React 19 + Auth.js (Google) | Ranking / 2 jugadores |
+| Datos | `src/data.generated.json` (`npm run sync`) | Postgres: users, partidas, ranking |
 | Estado | `useState` + localStorage | Server actions + sesión |
-| Ranking | no hay | tabla `scores` + página de clasificación |
+| Ranking | historial propio (`Round`) | ranking público (aún no) |
 
 El motor del juego (`makeChallenge`, `scoreRound`) son funciones puras sin React,
 en `src/engine.ts`. Reciben un catálogo `{ sport, stats, players }`. La NBA es
@@ -61,10 +64,10 @@ Categorías: puntos, rebotes, asistencias, tapones, robos, triples.
 El tablero de trabajo está en [`docs/tareas.md`](docs/tareas.md).
 
 - [x] M1 · Pasar a Next.js (mismo juego)
-- [ ] M2 · Postgres + semilla
-- [ ] M3 · Login con Google (Auth.js)
+- [x] M2 · Prisma listo (catálogos siguen en JSON)
+- [x] M3 · Login con Google (Auth.js)
 - [x] M4 · API ciega
-- [ ] M5 · Cron → Postgres
+- [x] M5 · Cron → JSON
 - [ ] M6 · 2 jugadores
 - [x] M7 · Deploy
 - [ ] M0 · Playtest con colegas y ajustar la curva

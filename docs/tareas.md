@@ -19,7 +19,9 @@ reto      →  {sport, stat, target, updatedAt}
 deportes  →  {id, name, scope, logo}
 revelar   →  {values[], total, points, verdict}
 login     →  Google → users
-cron      →  pisa players + updated_at + photo_id
+perfil    →  historial + récord (sesión)
+revelar   →  si hay sesión, guarda Round
+cron      →  pisa data.generated.json
 ```
 
 ## Orden
@@ -32,22 +34,24 @@ Portar, no rediseñar. Sigue leyendo `data.generated.json`.
 - [x] Motor, datos y UI en `src/` (`App.tsx` es client)
 - [x] `npm run dev` y una ronda completa igual que ahora
 
-### M2 · Postgres + semilla
+### M2 · Prisma listo (no el catálogo)
 
-- [ ] Prisma + tablas:
-      `users` (id, email, name, image, googleId)
-      `players` (id, name, league, stat, value, rank, photoId)
-      `meta` (updated_at)
-- [ ] Seed desde `src/data.generated.json`
-- [ ] La UI lee `updated_at`
+Postgres es para cuentas, partidas y ranking. Las cifras de la NBA siguen
+en JSON: un archivo + cron semanal.
+
+- [x] Prisma + Prisma Postgres (env, migraciones, cliente)
+- [x] Catálogos en `src/data.generated.json` (no en la DB)
+- [x] La UI lee `updated_at` del JSON
 
 ### M3 · Login con Google
 
 Auth.js. Lo mínimo: entrar / salir. Sin página de perfil.
 
-- [ ] Botón “Entrar con Google”
-- [ ] Sesión en el servidor
-- [ ] Sin cuenta se puede mirar; para guardar partida, login (cuando exista M6)
+- [x] Botón “Entrar con Google”
+- [x] Sesión en el servidor
+- [x] Sin cuenta se puede jugar; las cifras van a localStorage
+- [x] Con cuenta, cada revelado guarda una `Round`
+- [x] Pestaña Perfil: récord, media, mejor por stat, historial
 
 ### M4 · API ciega
 
@@ -58,13 +62,12 @@ El bundle deja de llevar cifras.
 - [x] `POST /api/reveal` → 5 nombres → cifras + `scoreRound`
 - [x] Quitar `PLAYERS` del cliente
 
-### M5 · Cron a Postgres
+### M5 · Cron del catálogo
 
-El `npm run sync` de ahora ya tira de NBA Stats.
+El `npm run sync` de ahora ya tira de NBA Stats y pisa el JSON.
 
-- [x] Fuente + JSON + fotos (prototipo)
-- [ ] El mismo script hace upsert en `players` + `meta.updated_at`
-- [ ] Si falla, se sirven los de la semana anterior
+- [x] Fuente + JSON + fotos
+- [x] Si falla, se quedan los de la semana anterior (el JSON no se toca)
 
 ### M6 · 2 jugadores
 
@@ -97,4 +100,7 @@ Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 |---|---|
 | M4 | El cliente manda `target` al revelar; no hay tabla `challenges` (serverless). |
 | catálogos | La NBA es un `Sport` (nombre, logo, fotos). El motor recibe un `Catalog`. |
+| M2 | Catálogos = JSON. Postgres = users / partidas / ranking (M3 en adelante). |
+| M3 | Tabla `users` la crea Auth.js. |
+| perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
 | M6 | ¿Mismo dispositivo o dos móviles? |

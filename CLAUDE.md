@@ -19,6 +19,10 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto). Ciego, cliente OK.
 - `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
+- `src/lib/prisma.ts` — cliente Prisma.
+- `src/lib/rounds.ts` — persistir y leer rondas del usuario.
+- `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
+- `src/components/Profile.tsx` — pestaña Perfil (historial).
 - `src/data.generated.json` — top ~3000 NBA + `nbaId`. Lo pisa `npm run sync`
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
 - `src/engine.ts` — motor: `makeChallenge(catalog, prevStatId)` y `scoreRound`.
@@ -26,7 +30,7 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   No importar desde el cliente.
 - `src/format.ts`, `src/photos.ts`, `src/storage.ts` — helpers ciegos (cliente).
 - `src/App.tsx` — UI (client component). Habla con `/api/sports`, `/api/players`,
-  `/api/challenge` y `/api/reveal`. No ve `value` hasta revelar.
+  `/api/challenge`, `/api/reveal` y `/api/me`. No ve `value` hasta revelar.
 - `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
 - `public/sports/` — logos de catálogo.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
@@ -41,16 +45,17 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   `Catalog`. La NBA es el primer catálogo, no el juego. Un deporte nuevo:
   `sport.ts` (meta + stats) + loader de cifras + logo en `public/sports/` +
   una línea en `registry.ts` y `catalogs/load.ts`.
-- **Nada de dependencias nuevas sin motivo.** Ahora: Next.js + React + TS.
-  Siguiente: Prisma + Auth.js. Si algo pide otra librería, plantéalo.
+- **Nada de dependencias nuevas sin motivo.** Ahora: Next.js + React + TS +
+  Prisma + Auth.js. Si algo pide otra librería, plantéalo.
 - **Un cambio, una pregunta respondida.** Este proyecto existe para saber si el
   juego engancha. Las features que no ayuden a contestar eso esperan.
 
 ## Estado actual y lo siguiente
 
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
-API ciega + catálogos: el cliente no lleva cifras. NBA es el primer deporte.
-Siguiente catálogo = datos, no un refactor. Orden en `docs/tareas.md`.
+API ciega + catálogos en JSON. Login Google opcional: se puede jugar sin cuenta.
+Con sesión, las rondas se guardan y se ven en Perfil. Siguiente: M6 o playtest
+(M0). Orden en `docs/tareas.md`.
 
 ## Idioma
 

@@ -11,3 +11,11 @@ export const fmtDate = (iso: string) =>
     month: "short",
     year: "numeric",
   });
+
+export const fmtWhen = (iso: string) =>
+  new Date(iso).toLocaleString("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });

@@ -3,13 +3,16 @@
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
 import { SPORTS, DEFAULT_SPORT_ID } from "./catalogs/registry";
 import { SLOTS, fold, fmt, fmtDate } from "./format";
-import { photoUrl, initials } from "./photos";
 import { loadStats, saveStats } from "./storage";
+import { AuthButton, type AuthUser } from "./components/AuthButton";
+import { Face } from "./components/Face";
+import { Profile } from "./components/Profile";
 import type {
   CatalogPlayer,
   ChallengePayload,
   LocalStats,
   Phase,
+  ProfilePayload,
   RosterPick,
   RoundScore,
   Sport,
@@ -68,24 +71,6 @@ function useCountUp(target: number, duration: number) {
 function SlotValue({ value }: { value: number }) {
   const n = useCountUp(value, COUNT_SLOT_MS);
   return <div className="slot-value">{fmt(n)}</div>;
-}
-
-type FacePlayer = { name: string; photoId: string };
-
-function Face({ player, sport, size = "slot" }: { player: FacePlayer; sport: Sport; size?: "slot" | "list" }) {
-  const [broken, setBroken] = useState(false);
-  useEffect(() => { setBroken(false); }, [player.photoId]);
-  if (broken) {
-    return <span className={`face face-fallback face-${size}`}>{initials(player.name)}</span>;
-  }
-  return (
-    <img
-      className={`face face-${size}`}
-      src={photoUrl(sport.photoUrl, player.photoId)}
-      alt=""
-      onError={() => setBroken(true)}
-    />
-  );
 }
 
 type SlotProps = {
@@ -236,21 +221,36 @@ const STING_LABEL: Record<Sting, string> = {
   miss: "Fuera",
 };
 
-export default function App() {
+type Tab = "play" | "profile";
+
+async function fetchProfile(): Promise<ProfilePayload | null> {
+  const res = await fetch("/api/me");
+  if (!res.ok) return null;
+  return res.json() as Promise<ProfilePayload>;
+}
+
+export default function App({ user }: { user: AuthUser | null }) {
   const [sportId, setSportId] = useState(DEFAULT_SPORT_ID);
+  const [tab, setTab] = useState<Tab>("play");
   const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
   const [picks, setPicks] = useState<(RosterPick | null)[]>(() => Array(SLOTS).fill(null));
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("picking");
   const [stats, setStats] = useState<LocalStats>({ rounds: 0, best: 0, sum: 0 });
+  const [profile, setProfile] = useState<ProfilePayload | null>(null);
+  const [profileLoading, setProfileLoading] = useState(Boolean(user));
   const [sting, setSting] = useState<Sting | null>(null);
   const [result, setResult] = useState<RoundScore | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [locking, setLocking] = useState(false);
   const timers = useRef<number[]>([]);
 
+  const applyProfile = (data: ProfilePayload) => {
+    setProfile(data);
+    setStats({ rounds: data.rounds, best: data.best, sum: data.sum });
+  };
+
   useEffect(() => {
-    setStats(loadStats());
     let cancelled = false;
     (async () => {
       try {
@@ -265,6 +265,26 @@ export default function App() {
       timers.current.forEach(clearTimeout);
     };
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setStats(loadStats());
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setProfileLoading(true);
+    (async () => {
+      try {
+        const data = await fetchProfile();
+        if (!cancelled && data) applyProfile(data);
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const filled = picks.filter(Boolean).length;
   const total = picks.reduce((a, p, i) => a + (p && i < shown && p.value != null ? p.value : 0), 0);
@@ -314,11 +334,15 @@ export default function App() {
             const grade = stingOf(data.err);
             setSting(grade);
             timers.current.push(window.setTimeout(() => setSting(null), 2200));
-            setStats(s => {
-              const ns = { rounds: s.rounds + 1, best: Math.max(s.best, data.points), sum: s.sum + data.points };
-              saveStats(ns);
-              return ns;
-            });
+            if (user) {
+              void fetchProfile().then(me => { if (me) applyProfile(me); });
+            } else {
+              setStats(s => {
+                const ns = { rounds: s.rounds + 1, best: Math.max(s.best, data.points), sum: s.sum + data.points };
+                saveStats(ns);
+                return ns;
+              });
+            }
           }
         }, REVEAL_STEP_MS * (i + 1))
       );
@@ -384,17 +408,6 @@ export default function App() {
 
   const grade = result && phase === "done" ? stingOf(result.err) : null;
 
-  if (loadError) {
-    return (
-      <div className="arena">
-        <p className="credit">No se pudo cargar el reto.</p>
-        <button className="btn primary" onClick={retryBoot}>Reintentar</button>
-      </div>
-    );
-  }
-
-  if (!challenge) return <div className="arena" aria-busy="true" />;
-
   return (
     <div className={grade ? `arena arena-${grade}` : "arena"}>
       {sting && (
@@ -407,30 +420,64 @@ export default function App() {
       <header className="hud">
         <div>
           <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
-          <nav className="sports" aria-label="Catálogo">
-            {SPORTS.map(s => (
-              <button
-                key={s.id}
-                type="button"
-                className={"sport-tab" + (s.id === challenge.sport.id ? " on" : "")}
-                aria-pressed={s.id === challenge.sport.id}
-                disabled={SPORTS.length === 1 || locking || phase === "revealing"}
-                onClick={() => selectSport(s.id)}
-              >
-                <img src={s.logo} alt="" width={20} height={20} />
-                <span>{s.name}</span>
-              </button>
-            ))}
+          <nav className="tabs" aria-label="Sección">
+            <button type="button" className={"tab" + (tab === "play" ? " on" : "")} onClick={() => setTab("play")}>
+              Juego
+            </button>
+            <button type="button" className={"tab" + (tab === "profile" ? " on" : "")} onClick={() => setTab("profile")}>
+              Perfil
+            </button>
           </nav>
-          <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
+          {tab === "play" && (
+            <>
+              <nav className="sports" aria-label="Catálogo">
+                {SPORTS.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
+                    aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
+                    disabled={SPORTS.length === 1 || locking || phase === "revealing"}
+                    onClick={() => selectSport(s.id)}
+                  >
+                    <img src={s.logo} alt="" width={20} height={20} />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
+              </nav>
+              {challenge && (
+                <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
+              )}
+            </>
+          )}
         </div>
-        <div className="hud-stats">
-          <div className="hud-stat">Récord<b>{stats.best}</b></div>
-          <div className="hud-stat">Media<b>{avg}</b></div>
-          <div className="hud-stat">Rondas<b>{stats.rounds}</b></div>
+        <div className="hud-right">
+          <div className="hud-stats">
+            <div className="hud-stat">Récord<b>{stats.best}</b></div>
+            <div className="hud-stat">Media<b>{avg}</b></div>
+            <div className="hud-stat">Rondas<b>{stats.rounds}</b></div>
+          </div>
+          <AuthButton user={user} />
         </div>
       </header>
 
+      {tab === "profile" && (
+        <Profile user={user} profile={profile} loading={profileLoading} />
+      )}
+
+      {tab === "play" && loadError && (
+        <>
+          <p className="credit">No se pudo cargar el reto.</p>
+          <button className="btn primary" onClick={retryBoot}>Reintentar</button>
+        </>
+      )}
+
+      {tab === "play" && !loadError && !challenge && (
+        <div aria-busy="true" />
+      )}
+
+      {tab === "play" && challenge && (
+      <>
       <section className="jumbo">
         <div>
           <div className="phase">{phaseLabel} · 5 vs objetivo</div>
@@ -506,6 +553,8 @@ export default function App() {
       <p className="credit">
         {challenge.poolSize.toLocaleString("es-ES")} jugadores · act. {fmtDate(challenge.updatedAt)}
       </p>
+      </>
+      )}
     </div>
   );
 }

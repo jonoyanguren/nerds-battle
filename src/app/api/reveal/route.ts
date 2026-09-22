@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { getCatalog } from "@/catalogs/load";
 import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
 import { SLOTS, scoreRound } from "@/engine";
+import { saveRound } from "@/lib/rounds";
 import { hasStat } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -37,14 +39,38 @@ export async function POST(request: Request) {
   }
   const list = catalog.players[stat];
   const values: number[] = [];
+  const photoIds: string[] = [];
   for (const name of typedNames) {
     const player = list.find(p => p.name === name);
     if (!player) {
       return NextResponse.json({ error: "unknown player" }, { status: 400 });
     }
     values.push(player.value);
+    photoIds.push(player.photoId);
   }
   const total = values.reduce((a, b) => a + b, 0);
   const score = scoreRound(total, target);
+
+  const session = await auth();
+  if (session?.user?.id) {
+    try {
+      await saveRound({
+        userId: session.user.id,
+        sport: sportId,
+        stat,
+        target,
+        names: typedNames,
+        photoIds,
+        values,
+        total,
+        points: score.points,
+        err: score.err,
+        verdict: score.verdict.title,
+      });
+    } catch (error) {
+      console.error("saveRound", error);
+    }
+  }
+
   return NextResponse.json({ values, total, ...score });
 }
