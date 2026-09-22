@@ -19,6 +19,7 @@ reto      →  {sport, stat, target, updatedAt}
 deportes  →  {id, name, scope, logo}
 revelar   →  {values[], total, points, verdict}
           →  si hay sesión, guarda Round
+duelo     →  2 plantillas → cifras de las dos + ganador. Nunca guarda.
 yo        →  GET /api/me → récord, media, historial
 login     →  Google → users
 perfil    →  historial + récord (sesión)
@@ -74,8 +75,20 @@ GitHub Actions: lunes 06:00 UTC.
 
 ### M6 · 2 jugadores
 
-Mismo reto, dos rondas, el segundo no ve al primero.
-Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
+Mismo reto, dos rondas, el segundo no ve al primero. **Mismo dispositivo**:
+se pasa el móvil. Dos sesiones se aparca — comparar a distancia pide retos
+emitidos y validados por el servidor (`game-design.md`), y eso es otra tarea.
+
+- [x] Interruptor 1 jugador / 2 jugadores
+- [x] El jugador 1 ficha, se cierra su turno y la pantalla se tapa
+- [x] El jugador 2 ficha el mismo reto sin ver nada del primero
+- [x] `POST /api/duel`: las dos plantillas se revelan de una vez
+- [x] `duelWinner` en el motor: gana quien menos error tenga
+- [x] Un duelo no guarda `Round` ni toca el HUD: el perfil es de una persona
+
+La plantilla del primero se borra de la pantalla **antes** de levantar la
+cortina, así que detrás no queda nada que mirar. Y se revela de una sola
+llamada: si el primero viera sus cifras, el segundo las vería también.
 
 ### M7 · URL
 
@@ -106,4 +119,4 @@ Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 | M2 | Catálogos = JSON. Postgres = users / partidas / ranking (M3 en adelante). |
 | M3 | Tabla `users` la crea Auth.js. |
 | perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
-| M6 | ¿Mismo dispositivo o dos móviles? |
+| M6 | Mismo dispositivo: se pasa el móvil. Dos sesiones pediría retos emitidos por el servidor. |

@@ -21,6 +21,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
 - `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
+- `src/lib/roster.ts` — valida 5 nombres y les saca las cifras. Lo usan
+  `/api/reveal` y `/api/duel`; no duplicar esa validación en cada ruta.
 - `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
 - `src/components/Profile.tsx` — pestaña Perfil (historial, mejor por stat).
 - `src/components/Face.tsx` — foto de jugador (slots, buscador, historial).
@@ -33,9 +35,10 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   No importar desde el cliente.
 - `src/format.ts`, `src/photos.ts` — helpers ciegos (cliente).
 - `src/storage.ts` — HUD del invitado (`localStorage`). Con sesión no se usa.
-- `src/App.tsx` — UI (client). Pestañas Juego / Perfil. APIs `/api/sports`,
-  `/api/players`, `/api/challenge`, `/api/reveal`, `/api/me`. No ve `value`
-  hasta revelar.
+- `src/App.tsx` — UI (client). Pestañas Juego / Perfil y modo 1 / 2 jugadores.
+  APIs `/api/sports`, `/api/players`, `/api/challenge`, `/api/reveal`,
+  `/api/duel`, `/api/me`. No ve `value` hasta revelar, y en duelo no ve
+  ninguna cifra hasta que han jugado los dos.
 - `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
 - `public/sports/` — logos de catálogo.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
@@ -59,8 +62,10 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
 API ciega + catálogos en JSON. Login Google opcional: se puede jugar sin cuenta.
-Con sesión, las rondas se guardan y se ven en Perfil. Siguiente: M6 o playtest
-(M0). Orden en `docs/tareas.md`.
+Con sesión, las rondas se guardan y se ven en Perfil. Modo 2 jugadores en el
+mismo dispositivo (M6): mismo reto, se pasa el móvil, gana quien menos error
+tenga; el duelo no se guarda. Siguiente: playtest (M0) y lo que queda de M7.
+Orden en `docs/tareas.md`.
 
 ## Idioma
 

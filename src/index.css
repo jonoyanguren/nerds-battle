@@ -289,8 +289,65 @@ body{
   color:#5C6776;
 }
 
+/* --- M6: dos jugadores, mismo móvil --- */
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mode-tab{
+  padding:4px 10px;border:1px solid var(--line);background:var(--panel);
+  color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  cursor:pointer;
+}
+.mode-tab.on{border-color:var(--accent);color:var(--ink);background:var(--panel-2)}
+.mode-tab:disabled{opacity:.35;cursor:not-allowed}
+
+/* Opaca del todo: es lo único que separa al jugador 2 de la plantilla del 1. */
+.curtain{
+  position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:var(--ground);
+  animation:curtain-in .18s ease;
+}
+@keyframes curtain-in{from{opacity:0}to{opacity:1}}
+.curtain-box{
+  max-width:420px;width:100%;text-align:center;
+  border:1px solid var(--line);background:var(--panel);padding:26px 22px;
+}
+.curtain-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.curtain-title{font-family:var(--display);font-size:clamp(34px,9vw,52px);line-height:.9;margin:10px 0 12px}
+.curtain-line{color:var(--muted);font-size:13px;margin:0 0 20px}
+
+.duel{display:flex;flex-direction:column;gap:10px;animation:result-in .45s ease}
+.duel-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+}
+.duel-head b{font-family:var(--display);font-size:26px;letter-spacing:.02em;color:var(--accent);font-weight:400}
+.duel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duel-side{border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+.duel-side.win{border-color:#2A6B50;box-shadow:0 0 30px rgba(61,220,151,.12)}
+.duel-side.lose{opacity:.72}
+.duel-who{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding:10px 12px;border-bottom:1px solid var(--line);background:#121722;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+}
+.duel-who em{font-style:normal;color:var(--good);font-weight:600}
+.duel-nums{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.duel-nums>div{padding:10px 12px;border-right:1px solid var(--line)}
+.duel-nums>div:last-child{border-right:0}
+.duel-nums span{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.duel-nums b{font-family:var(--display);font-size:22px;font-weight:400;line-height:1;
+  font-variant-numeric:tabular-nums}
+.duel-picks{list-style:none;margin:0;padding:0}
+.duel-pick{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line)}
+.duel-pick-name{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.duel-pick-value{font-family:var(--display);font-size:16px;color:var(--accent);font-variant-numeric:tabular-nums}
+.duel-verdict{padding:10px 12px;background:var(--panel-2);font-family:var(--display);font-size:20px;line-height:1}
+
 @media (max-width:720px){
   #root{padding:12px 12px 20px;gap:12px}
+  /* Apiladas: en 360px, dos columnas dejan los nombres ilegibles y lo que
+     hay que poder leer es justamente quién fichó a quién. */
+  .duel-grid{grid-template-columns:1fr}
   .jumbo{grid-template-columns:1fr}
   .targets,.target{text-align:left}
   .slots{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
