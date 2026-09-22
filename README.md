@@ -73,13 +73,14 @@ Categorías: puntos, rebotes, asistencias, tapones, robos, triples.
 (desde 1916) y `dcaribou/transfermarkt-datasets` para clubes. Se regenera con
 `npm run sync:football -- --write`, que antes imprime un informe de qué
 categorías dan buen juego.
-Categorías: goles en LaLiga y en la Premier, asistencias en la Premier,
-partidos en Champions y en LaLiga, y goles con la selección.
+Categorías: goles y asistencias en la Premier, partidos en Champions y en
+LaLiga, y goles con la selección.
 
-> **Ojo con el fútbol de clubes: solo cubre de 2012 en adelante.** Messi sale
-> con 305 goles en LaLiga y no con sus 474, y Raúl o Zarra no aparecen. Cada
-> categoría lo dice en su etiqueta. Esa fuente además está congelada desde
-> julio de 2026, así que el fútbol no tiene cron.
+> **Ojo con el fútbol de clubes: solo cubre de 2012 en adelante**, y Raúl o
+> Zarra no aparecen. Cada categoría lo dice en su etiqueta. Por eso quedó
+> fuera «goles en LaLiga», la única donde ese corte contradice una cifra que
+> la gente se sabe. Esa fuente además está congelada desde julio de 2026, así
+> que el fútbol no tiene cron.
 
 ## Roadmap
 

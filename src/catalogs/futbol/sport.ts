@@ -16,22 +16,22 @@ export const FOOTBALL_SPORT: Sport = {
 };
 
 /**
- * Las seis categorías, elegidas con el informe de `sync-football.mjs` delante
- * y no a ojo. Los ids son los mismos que genera el script, para que no haya
- * que traducir nada entre el archivo y el catálogo.
+ * Las cinco categorías, elegidas con el informe de `sync-football.mjs`
+ * delante y no a ojo. Los ids son los mismos que genera el script, para que
+ * no haya que traducir nada entre el archivo y el catálogo.
  *
  * Cada `note` dice desde cuándo cuenta, igual que hace la NBA con los tapones
- * y los triples. La fuente de clubes empieza en 2012, así que "Goles en
- * LaLiga" son los de esta última década: Messi sale con 305 y no con sus 474,
- * porque le faltan sus ocho primeras temporadas. Decirlo evita que parezca
- * que el juego está roto.
+ * y los triples. La fuente de clubes empieza en 2012.
+ *
+ * NO hay goles en LaLiga, y la ausencia es deliberada: es la única categoría
+ * donde ese corte contradice una cifra que la gente se sabe. Messi saldría
+ * con 305 goles en vez de 474, y quien ve eso no piensa «periodo acotado»,
+ * piensa «esto está roto». Las que quedan o están casi completas —Kane y
+ * Salah jugaron toda su carrera después de 2012, y las asistencias oficiales
+ * no existen antes de 2006— o no tienen una cifra histórica que las
+ * contradiga, como los partidos jugados.
  */
 export const FOOTBALL_STATS: Stat[] = [
-  {
-    id: "ES1_gol",
-    label: "Goles en LaLiga",
-    note: "Goles en Primera División española desde 2012.",
-  },
   {
     id: "GB1_gol",
     label: "Goles en la Premier",

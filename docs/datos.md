@@ -32,14 +32,13 @@ completa (ver «Lo que se descartó»).
 | Archivo | `src/football.generated.json` |
 | Se regenera con | `npm run sync:football -- --write` |
 | Cron | **No hay.** Ver limitaciones |
-| Tamaño | 6 categorías, hasta 3.000 jugadores cada una |
+| Tamaño | 5 categorías, hasta 3.000 jugadores cada una |
 | Fotos | No. Los huecos enseñan las iniciales |
 
 ### Qué contiene
 
 | Categoría | Jugadores | Líder | Cola | Periodo |
 |---|---|---|---|---|
-| Goles en LaLiga | 1.420 | Messi 305 | 1 | 2012–2026 |
 | Goles en la Premier | 1.356 | Kane 213 | 1 | 2012–2026 |
 | Asistencias en la Premier | 1.440 | De Bruyne 122 | 1 | 2012–2026 |
 | Partidos en Champions | 3.816 → 3.000 | Lewandowski 138 | 3 | 2012–2026 |
@@ -56,14 +55,25 @@ Neuer— y hay que saber de fútbol en vez de reconocer nombres.
 
 ### Limitaciones
 
-**1. Los clubes empiezan en 2012.** Es la más importante y la que más
-desconcierta. Messi sale con **305 goles en LaLiga** y no con sus 474: le
-faltan sus ocho primeras temporadas. Cristiano con 199 en vez de ~311. Raúl,
-Zarra o Hugo Sánchez **no aparecen**, porque se retiraron antes.
+**1. Los clubes empiezan en 2012.** Nada anterior existe en el catálogo: Raúl,
+Zarra o Hugo Sánchez no aparecen, porque se retiraron antes.
 
-No es un error del dato: es un periodo acotado, y cada categoría lo dice en su
-etiqueta. En cambio Kane, Salah, Mbappé o Haaland debutaron después de 2012, y
-sus cifras sí son prácticamente completas.
+No es un error del dato, es un periodo acotado, y cada categoría lo dice en su
+etiqueta. Pero el daño **no es igual en todas**, y por eso las categorías se
+eligieron mirando esto y no solo la curva:
+
+- **Casi intactas**: goles y asistencias de la Premier. Kane y Salah jugaron
+  toda su carrera después de 2012, y las asistencias oficiales ni siquiera
+  existen antes de 2006. A Agüero le falta una temporada (la 2011-12).
+- **Sin memoria que las contradiga**: partidos en Champions y en LaLiga.
+  Nadie lleva en la cabeza el total histórico de partidos de un jugador, así
+  que «desde 2012» se lee como lo que es.
+- **Descartada por esto**: goles en LaLiga. Tenía buena curva, pero Messi
+  saldría con **305 goles en vez de 474**. Quien ve esa cifra no piensa
+  «periodo acotado», piensa «el juego está roto» — y entonces el playtest
+  deja de medir si el juego engancha y pasa a medir si los datos fallan.
+  Si algún día hay una fuente con historia completa, esta es la primera
+  categoría que debería volver.
 
 **2. La fuente de clubes está congelada.** Su propio README lo dice: las
 actualizaciones están paradas desde julio de 2026 y no hay fecha para
@@ -92,11 +102,14 @@ dos. Poner la fecha de hoy presumiría de una frescura que no tiene.
 
 ### Lo que se descartó, y por qué
 
-De las 95 categorías que salían con datos suficientes entraron 6. Las demás
+De las 95 categorías que salían con datos suficientes entraron 5. Casi todas
 cayeron porque **castigan demasiado**: con objetivos pequeños, fallar por una
 sola unidad hunde la ronda. En goles de Champions (objetivo mediano 76) fallar
 por uno cuesta 66 puntos; en goles de Copa del Rey, 132. Fuera también las
 copas nacionales y las fases de clasificación.
+
+La excepción es **goles en LaLiga**, que cayó por el motivo contrario: la
+curva era buena y el descarte fue por credibilidad, no por jugabilidad.
 
 Mención aparte para `FIWC_par`, partidos en el Mundial: todo el mundo tiene
 tres y el objetivo salía siempre 15. Habría entrado si las categorías se

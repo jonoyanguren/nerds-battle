@@ -64,10 +64,16 @@ const MIN_PLAYERS = 300;
  * hunde la ronda), las copas nacionales y las fases de clasificación. Y
  * `FIWC_par`, partidos en el Mundial, donde todo el mundo tiene tres y el
  * objetivo salía siempre 15.
+ *
+ * Y fuera también `ES1_gol`, goles en LaLiga, aunque la curva era buena: es
+ * la única categoría donde el corte de 2012 contradice algo que la gente se
+ * sabe. Messi aparecería con 305 goles cuando todo el mundo sabe que son
+ * 474. Quien ve eso no piensa «periodo acotado», piensa «esto está roto», y
+ * entonces el juego deja de medir lo que queremos medir. Las demás o están
+ * casi completas (Kane y Salah jugaron toda su carrera después de 2012) o
+ * no tienen una cifra histórica que las contradiga.
  */
 const CATEGORIAS = [
-  { id: "ES1_gol", label: "Goles en LaLiga",
-    note: "Goles en Primera División española desde 2012." },
   { id: "GB1_gol", label: "Goles en la Premier",
     note: "Goles en la Premier League inglesa desde 2012." },
   { id: "GB1_asi", label: "Asistencias en la Premier",

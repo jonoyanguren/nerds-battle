@@ -85,8 +85,8 @@ Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
 ### M8 · Segundo catálogo: fútbol
 
 Sale del cajón de «Aún no» porque el motor ya estaba listo y lo caro eran
-los datos, no el código. Seis categorías: goles y asistencias de liga,
-partidos en Champions y en LaLiga, y goles con la selección.
+los datos, no el código. Cinco categorías: goles y asistencias en la
+Premier, partidos en Champions y en LaLiga, y goles con la selección.
 
 - [x] `npm run sync:football` con modo informe: mide cada categoría antes
       de elegirla, en vez de escogerlas a ojo
@@ -94,9 +94,10 @@ partidos en Champions y en LaLiga, y goles con la selección.
 - [x] `src/catalogs/futbol/` + logo + registro
 - [x] Ficha completa en `docs/datos.md`: qué contiene, de dónde y qué no cubre
 
-Lo que hay que saber: los clubes solo cubren de 2012 en adelante (Messi
-sale con 305 goles en LaLiga, no con 474) y esa fuente ya no se actualiza,
-así que el fútbol no tiene cron. Todo explicado en `docs/datos.md`.
+Lo que hay que saber: los clubes solo cubren de 2012 en adelante y esa
+fuente ya no se actualiza, así que el fútbol no tiene cron. Por eso se
+dejó fuera «goles en LaLiga» pese a tener buena curva: Messi saldría con
+305 y no con 474, y esa sí la gente se la sabe. Todo en `docs/datos.md`.
 
 ## Al final — M0 · Colegas
 
