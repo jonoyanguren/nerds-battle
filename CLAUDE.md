@@ -19,18 +19,23 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto). Ciego, cliente OK.
 - `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
-- `src/lib/prisma.ts` — cliente Prisma.
+- `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
 - `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
-- `src/components/Profile.tsx` — pestaña Perfil (historial).
+- `src/components/Profile.tsx` — pestaña Perfil (historial, mejor por stat).
+- `src/components/Face.tsx` — foto de jugador (slots, buscador, historial).
+- `prisma/schema.prisma` — `User` / `Account` / `Session` (Auth.js) + `Round`.
+- `.env.example` — `DATABASE_URL`, `PRISMA_DIRECT_TCP_URL`, `AUTH_*`.
 - `src/data.generated.json` — top ~3000 NBA + `nbaId`. Lo pisa `npm run sync`
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
 - `src/engine.ts` — motor: `makeChallenge(catalog, prevStatId)` y `scoreRound`.
   Funciones puras, sin React. El catálogo es `{ sport, stats, players[statId] }`.
   No importar desde el cliente.
-- `src/format.ts`, `src/photos.ts`, `src/storage.ts` — helpers ciegos (cliente).
-- `src/App.tsx` — UI (client component). Habla con `/api/sports`, `/api/players`,
-  `/api/challenge`, `/api/reveal` y `/api/me`. No ve `value` hasta revelar.
+- `src/format.ts`, `src/photos.ts` — helpers ciegos (cliente).
+- `src/storage.ts` — HUD del invitado (`localStorage`). Con sesión no se usa.
+- `src/App.tsx` — UI (client). Pestañas Juego / Perfil. APIs `/api/sports`,
+  `/api/players`, `/api/challenge`, `/api/reveal`, `/api/me`. No ve `value`
+  hasta revelar.
 - `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
 - `public/sports/` — logos de catálogo.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.

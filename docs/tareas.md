@@ -2,8 +2,8 @@
 
 Una cosa cada vez. Tachar al cerrar.
 
-El enlace a colegas **puede esperar** (semanas). Se manda cuando el
-juego + cuenta Google estén en Next.js, no un Vite estático.
+El enlace a colegas **puede esperar** (semanas). Next.js + Google ya
+están; M0 es mandar la URL y anotar la curva.
 
 El motor (`makeChallenge`, `scoreRound`) no se reescribe. Next.js solo
 cambia de dónde salen los datos y **cuándo** se ven las cifras.
@@ -11,16 +11,17 @@ cambia de dónde salen los datos y **cuándo** se ven las cifras.
 ## Cómo es el backend
 
 Next.js (App Router) + Postgres + Prisma + Auth.js (Google).
-Cron semanal (Vercel cron o el script de ahora).
+Cron semanal: GitHub Actions (lunes 06:00 UTC) o `npm run sync`.
 
 ```
 buscador  →  {name, rank, photo}    nunca value
 reto      →  {sport, stat, target, updatedAt}
 deportes  →  {id, name, scope, logo}
 revelar   →  {values[], total, points, verdict}
+          →  si hay sesión, guarda Round
+yo        →  GET /api/me → récord, media, historial
 login     →  Google → users
 perfil    →  historial + récord (sesión)
-revelar   →  si hay sesión, guarda Round
 cron      →  pisa data.generated.json
 ```
 
@@ -45,13 +46,14 @@ en JSON: un archivo + cron semanal.
 
 ### M3 · Login con Google
 
-Auth.js. Lo mínimo: entrar / salir. Sin página de perfil.
+Auth.js. Entrar / salir + pestaña Perfil. Sin ruta `/perfil`.
 
 - [x] Botón “Entrar con Google”
 - [x] Sesión en el servidor
-- [x] Sin cuenta se puede jugar; las cifras van a localStorage
+- [x] Sin cuenta se puede jugar; el HUD va a localStorage
 - [x] Con cuenta, cada revelado guarda una `Round`
 - [x] Pestaña Perfil: récord, media, mejor por stat, historial
+- [x] `GET /api/me` (401 si no hay sesión)
 
 ### M4 · API ciega
 
@@ -64,7 +66,8 @@ El bundle deja de llevar cifras.
 
 ### M5 · Cron del catálogo
 
-El `npm run sync` de ahora ya tira de NBA Stats y pisa el JSON.
+El `npm run sync` tira de NBA Stats (top 3000) y pisa el JSON.
+GitHub Actions: lunes 06:00 UTC.
 
 - [x] Fuente + JSON + fotos
 - [x] Si falla, se quedan los de la semana anterior (el JSON no se toca)
