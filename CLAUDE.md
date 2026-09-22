@@ -19,6 +19,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto). Ciego, cliente OK.
 - `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
+- `src/catalogs/futbol/` — segundo catálogo. Cifras en `src/football.generated.json`,
+  que genera `scripts/sync-football.mjs`. Sin fotos: se ven las iniciales.
 - `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
 - `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
@@ -38,6 +40,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   hasta revelar.
 - `src/app/` — Next.js App Router (`layout.tsx`, `page.tsx`, `api/`).
 - `public/sports/` — logos de catálogo.
+- `docs/datos.md` — **de dónde sale cada cifra y qué no cubre.** Añadir un
+  catálogo obliga a añadir aquí su ficha.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
 - `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
 - `README.md` — visión general y roadmap.
@@ -49,7 +53,14 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - **Los datos son una dependencia, no parte del juego.** El motor consume un
   `Catalog`. La NBA es el primer catálogo, no el juego. Un deporte nuevo:
   `sport.ts` (meta + stats) + loader de cifras + logo en `public/sports/` +
-  una línea en `registry.ts` y `catalogs/load.ts`.
+  una línea en `registry.ts` y `catalogs/load.ts` + su ficha en `docs/datos.md`.
+- **Las categorías se miden, no se eligen a ojo.** Una estadística con
+  objetivos pequeños castiga fallar por uno con cientos de puntos y es
+  injugable. `sync-football.mjs --report` calcula ese coste; cópialo al añadir
+  un catálogo.
+- **Si el dato está acotado, se dice.** Cada `Stat` lleva un `note` con desde
+  cuándo cuenta. Los goles de LaLiga son desde 2012, y callarlo haría parecer
+  que el juego está roto en vez de que el periodo es otro.
 - **Nada de dependencias nuevas sin motivo.** Ahora: Next.js + React + TS +
   Prisma + Auth.js. Si algo pide otra librería, plantéalo.
 - **Un cambio, una pregunta respondida.** Este proyecto existe para saber si el

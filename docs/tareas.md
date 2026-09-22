@@ -82,6 +82,22 @@ Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
 - [x] Deploy Vercel
 - [ ] Comprobar en el móvil: una ronda
 
+### M8 · Segundo catálogo: fútbol
+
+Sale del cajón de «Aún no» porque el motor ya estaba listo y lo caro eran
+los datos, no el código. Seis categorías: goles y asistencias de liga,
+partidos en Champions y en LaLiga, y goles con la selección.
+
+- [x] `npm run sync:football` con modo informe: mide cada categoría antes
+      de elegirla, en vez de escogerlas a ojo
+- [x] `src/football.generated.json` desde dos fuentes CC0
+- [x] `src/catalogs/futbol/` + logo + registro
+- [x] Ficha completa en `docs/datos.md`: qué contiene, de dónde y qué no cubre
+
+Lo que hay que saber: los clubes solo cubren de 2012 en adelante (Messi
+sale con 305 goles en LaLiga, no con 474) y esa fuente ya no se actualiza,
+así que el fútbol no tiene cron. Todo explicado en `docs/datos.md`.
+
 ## Al final — M0 · Colegas
 
 - [ ] Mandar el enlace a 3–5 colegas
@@ -91,7 +107,7 @@ Puede ser local (mismo dispositivo) o dos sesiones. Se decide al llegar.
 
 ## Aún no
 
-Más catálogos (fútbol, Pokémon…), ranking global, reto diario, mostrar cifras
+Más catálogos (Pokémon…), ranking global, reto diario, mostrar cifras
 antes de tiempo, ordenar el buscador por stat.
 
 Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
@@ -107,3 +123,4 @@ Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 | M3 | Tabla `users` la crea Auth.js. |
 | perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
 | M6 | ¿Mismo dispositivo o dos móviles? |
+| M8 | Fútbol: clubes desde 2012 y sin cron (la fuente está parada). Se etiqueta en vez de ocultarse. |

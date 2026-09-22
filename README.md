@@ -9,8 +9,9 @@ cifras** y al final descubres cuánto te has acercado.
 
 ## Estado
 
-**Prototipo jugable.** Un jugador, 6 estadísticas NBA, ~3000 jugadores por
-estadística. Las cifras viven en el servidor (`/api/challenge`, `/api/players`,
+**Prototipo jugable.** Dos catálogos —**NBA** y **Fútbol**—, 6 estadísticas
+cada uno y hasta 3000 jugadores por estadística. Las cifras viven en el
+servidor (`/api/challenge`, `/api/players`,
 `/api/reveal`). Login Google opcional: pestaña **Juego / Perfil**. Con cuenta
 se guardan las rondas (récord, media, mejor por stat, historial). Sin cuenta,
 el HUD usa `localStorage`. Sin ranking público. En Vercel:
@@ -60,12 +61,25 @@ el primer deporte; otro catálogo no cambia el motor.
 
 ## Datos
 
-Totales de carrera NBA en temporada regular, top 3000 de cada categoría, vía
-NBA Stats (`alltimeleadersgrids`). Las fotos son del CDN de la NBA
-(`260x190/{nbaId}.png`). `npm run sync` actualiza cifras, ids y la fecha
-que se ve en la UI.
+La ficha completa —de dónde sale cada cifra, qué cubre y qué **no**— está en
+[`docs/datos.md`](docs/datos.md). Resumen:
 
+**NBA.** Totales de carrera en temporada regular, top 3000 de cada categoría,
+vía NBA Stats (`alltimeleadersgrids`). Fotos del CDN de la NBA. `npm run sync`
+actualiza cifras, ids y la fecha que se ve en la UI.
 Categorías: puntos, rebotes, asistencias, tapones, robos, triples.
+
+**Fútbol.** Dos fuentes CC0: `martj42/international_results` para selecciones
+(desde 1916) y `dcaribou/transfermarkt-datasets` para clubes. Se regenera con
+`npm run sync:football -- --write`, que antes imprime un informe de qué
+categorías dan buen juego.
+Categorías: goles en LaLiga y en la Premier, asistencias en la Premier,
+partidos en Champions y en LaLiga, y goles con la selección.
+
+> **Ojo con el fútbol de clubes: solo cubre de 2012 en adelante.** Messi sale
+> con 305 goles en LaLiga y no con sus 474, y Raúl o Zarra no aparecen. Cada
+> categoría lo dice en su etiqueta. Esa fuente además está congelada desde
+> julio de 2026, así que el fútbol no tiene cron.
 
 ## Roadmap
 
@@ -79,4 +93,5 @@ La mecánica y la curva, en [`docs/game-design.md`](docs/game-design.md).
 - [x] M5 · Cron → JSON
 - [ ] M6 · 2 jugadores
 - [x] M7 · Deploy
+- [x] M8 · Segundo catálogo: fútbol
 - [ ] M0 · Playtest con colegas y ajustar la curva
