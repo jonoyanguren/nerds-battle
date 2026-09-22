@@ -98,7 +98,12 @@ body{
 .history-score{text-align:right}
 .history-score b{display:block;font-family:var(--display);font-size:28px;line-height:1;font-weight:400;color:var(--good)}
 .history-score span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.history-line{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.history-board{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  margin-top:12px;border:1px solid var(--line);background:#121722;
+}
+.history-board .result-cell{padding:12px 14px}
+.history-board .result-cell b{font-size:clamp(22px,5vw,32px)}
 .history-picks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
 .history-pick{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
 .history-pick span{font-size:11px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -295,6 +300,8 @@ body{
   .draft{grid-template-columns:1fr}
   .result-top{grid-template-columns:1fr}
   .result-cell{border-right:0;border-bottom:1px solid var(--line)}
+  .history-board .result-cell{padding:10px 8px;border-right:1px solid var(--line);border-bottom:0}
+  .history-board .result-cell:last-child{border-right:0}
   .history-picks{gap:4px}
   .history-pick span{font-size:9px}
   .history-pick b{font-size:13px}

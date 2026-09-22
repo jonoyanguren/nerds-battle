@@ -84,8 +84,21 @@ export function Profile({
                       <span>{round.verdict}</span>
                     </div>
                   </div>
-                  <div className="history-line">
-                    Objetivo {fmt(round.target)} · suma {fmt(round.total)} · error {(round.err * 100).toFixed(1)}%
+                  <div className="history-board">
+                    <div className="result-cell">
+                      <span>Objetivo</span>
+                      <b>{fmt(round.target)}</b>
+                    </div>
+                    <div className="result-cell">
+                      <span>Suma</span>
+                      <b>{fmt(round.total)}</b>
+                    </div>
+                    <div className="result-cell">
+                      <span>Error</span>
+                      <b style={{ color: round.err <= 0.03 ? "var(--good)" : round.err <= 0.15 ? "var(--accent)" : "var(--bad)" }}>
+                        {(round.err * 100).toFixed(1)}%
+                      </b>
+                    </div>
                   </div>
                   {sport && (
                     <div className="history-picks">
