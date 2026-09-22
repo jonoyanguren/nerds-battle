@@ -18,14 +18,31 @@
 import { createGunzip } from "node:zlib";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
-import { writeFileSync, renameSync } from "node:fs";
+import { writeFileSync, renameSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = join(ROOT, "src", "football.generated.json");
-const TMP = `${OUT}.tmp`;
+const AQUI = dirname(fileURLToPath(import.meta.url));
 const WRITE = process.argv.includes("--write");
+
+/**
+ * Dónde se guarda. Por defecto, donde lo quiere el repo.
+ *
+ * Pero este script también se ejecuta suelto, fuera del proyecto, porque la
+ * fuente de clubes no es alcanzable desde cualquier red. En ese caso la
+ * carpeta `src/` de al lado no existe y se escribe junto al propio script,
+ * en vez de reventar después de veinte minutos de descarga.
+ */
+function destino() {
+  const arg = process.argv.find(a => a.startsWith("--out="));
+  if (arg) return arg.slice("--out=".length);
+  const enRepo = join(AQUI, "..", "src", "football.generated.json");
+  if (existsSync(dirname(enRepo))) return enRepo;
+  return join(AQUI, "football.generated.json");
+}
+
+const OUT = destino();
+const TMP = `${OUT}.tmp`;
 
 const TM = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data";
 const INTL = "https://raw.githubusercontent.com/martj42/international_results/master/goalscorers.csv";
