@@ -80,15 +80,13 @@ se pasa el móvil. Dos sesiones se aparca — comparar a distancia pide retos
 emitidos y validados por el servidor (`game-design.md`), y eso es otra tarea.
 
 - [x] Interruptor 1 jugador / 2 jugadores
-- [x] El jugador 1 ficha, se cierra su turno y la pantalla se tapa
-- [x] El jugador 2 ficha el mismo reto sin ver nada del primero
+- [x] Fichan uno a uno sobre el mismo pool (un nombre no se puede repetir)
 - [x] `POST /api/duel`: las dos plantillas se revelan de una vez
 - [x] `duelWinner` en el motor: gana quien menos error tenga
 - [x] Un duelo no guarda `Round` ni toca el HUD: el perfil es de una persona
 
-La plantilla del primero se borra de la pantalla **antes** de levantar la
-cortina, así que detrás no queda nada que mirar. Y se revela de una sola
-llamada: si el primero viera sus cifras, el segundo las vería también.
+Si uno fichara los cinco de golpe se quedaría a los buenos. Por eso el
+turno cambia tras cada ficha. Las cifras salen en una sola llamada.
 
 ### M7 · URL
 

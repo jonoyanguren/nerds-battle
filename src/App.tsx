@@ -76,15 +76,18 @@ function SlotValue({ value }: { value: number }) {
   return <div className="slot-value">{fmt(n)}</div>;
 }
 
+const emptyRoster = (): (RosterPick | null)[] => Array(SLOTS).fill(null);
+
 type SlotProps = {
   n: number;
   pick: RosterPick | null;
   sport: Sport;
   revealed: boolean;
+  locked?: boolean;
   onRemove: () => void;
 };
 
-function Slot({ n, pick, sport, revealed, onRemove }: SlotProps) {
+function Slot({ n, pick, sport, revealed, locked, onRemove }: SlotProps) {
   const cls = "slot" + (pick ? " filled" : "") + (revealed ? " revealed" : "");
   return (
     <div className={cls}>
@@ -95,7 +98,7 @@ function Slot({ n, pick, sport, revealed, onRemove }: SlotProps) {
         : <div className="slot-empty">vacío</div>}
       {revealed && pick && pick.value != null
         ? <SlotValue key={pick.name} value={pick.value} />
-        : pick
+        : pick && !locked
           ? <button className="slot-x" onClick={onRemove}>QUITAR</button>
           : <div className="slot-drop">—</div>}
     </div>
@@ -236,7 +239,7 @@ export default function App({ user }: { user: AuthUser | null }) {
   const [sportId, setSportId] = useState(DEFAULT_SPORT_ID);
   const [tab, setTab] = useState<Tab>("play");
   const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
-  const [picks, setPicks] = useState<(RosterPick | null)[]>(() => Array(SLOTS).fill(null));
+  const [picks, setPicks] = useState<(RosterPick | null)[]>(emptyRoster);
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("picking");
   const [stats, setStats] = useState<LocalStats>({ rounds: 0, best: 0, sum: 0 });
@@ -251,8 +254,8 @@ export default function App({ user }: { user: AuthUser | null }) {
   // --- M6: dos jugadores, mismo móvil ---
   const [mode, setMode] = useState<Mode>("solo");
   const [turn, setTurn] = useState<1 | 2>(1);
-  const [handoff, setHandoff] = useState(false);
-  const [firstPicks, setFirstPicks] = useState<RosterPick[] | null>(null);
+  const [home, setHome] = useState<(RosterPick | null)[]>(emptyRoster);
+  const [away, setAway] = useState<(RosterPick | null)[]>(emptyRoster);
   const [duel, setDuel] = useState<{ sides: [DuelSide, DuelSide]; winner: DuelWinner } | null>(null);
   const [duelSting, setDuelSting] = useState(false);
 
@@ -298,15 +301,29 @@ export default function App({ user }: { user: AuthUser | null }) {
   }, [user]);
 
   const filled = picks.filter(Boolean).length;
+  const homeFilled = home.filter(Boolean).length;
+  const awayFilled = away.filter(Boolean).length;
+  const duelReady = homeFilled === SLOTS && awayFilled === SLOTS;
+  const draftTaken = mode === "duel" ? [...home, ...away] : picks;
   const total = picks.reduce((a, p, i) => a + (p && i < shown && p.value != null ? p.value : 0), 0);
   const finalTotal = picks.reduce((a, p) => a + (p?.value ?? 0), 0);
 
-  const place = (p: CatalogPlayer) => {
-    const i = picks.findIndex(x => !x);
-    if (i === -1) return;
-    const next = [...picks];
+  const fillSlot = (roster: (RosterPick | null)[], p: CatalogPlayer) => {
+    const i = roster.findIndex(x => !x);
+    if (i === -1) return roster;
+    const next = [...roster];
     next[i] = p;
-    setPicks(next);
+    return next;
+  };
+
+  const place = (p: CatalogPlayer) => {
+    if (mode === "duel") {
+      if (turn === 1) setHome(r => fillSlot(r, p));
+      else setAway(r => fillSlot(r, p));
+      setTurn(t => (t === 1 ? 2 : 1));
+      return;
+    }
+    setPicks(r => fillSlot(r, p));
   };
 
   const remove = (i: number) => {
@@ -315,19 +332,11 @@ export default function App({ user }: { user: AuthUser | null }) {
     setPicks(next);
   };
 
-  /** Cierra el turno del jugador 1 y tapa la pantalla para el cambio de manos. */
-  const passPhone = () => {
-    setFirstPicks(picks.filter((p): p is RosterPick => p !== null));
-    // La plantilla se vacía ANTES de levantar la cortina: así, cuando el
-    // segundo la quite, detrás no hay nada del primero que mirar.
-    setPicks(Array(SLOTS).fill(null));
-    setTurn(2);
-    setHandoff(true);
-  };
-
   const revealDuel = async () => {
-    if (!challenge || !firstPicks) return;
-    const second = picks.filter((p): p is RosterPick => p !== null);
+    if (!challenge) return;
+    const firstPicks = home.filter((p): p is RosterPick => p !== null);
+    const second = away.filter((p): p is RosterPick => p !== null);
+    if (firstPicks.length !== SLOTS || second.length !== SLOTS) return;
     setLocking(true);
     try {
       // Una sola llamada con las dos plantillas: si el primero revelara por
@@ -367,13 +376,9 @@ export default function App({ user }: { user: AuthUser | null }) {
 
   const reveal = async () => {
     if (!challenge || locking || phase !== "picking") return;
+    if (mode === "duel") return revealDuel();
     const names = picks.map(p => p?.name);
     if (names.some(n => !n)) return;
-
-    if (mode === "duel") {
-      if (turn === 1) return passPhone();
-      return revealDuel();
-    }
 
     setLocking(true);
     try {
@@ -422,15 +427,15 @@ export default function App({ user }: { user: AuthUser | null }) {
   const resetRound = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setPicks(Array(SLOTS).fill(null));
+    setPicks(emptyRoster());
+    setHome(emptyRoster());
+    setAway(emptyRoster());
     setShown(0);
     setPhase("picking");
     setSting(null);
     setResult(null);
     setLocking(false);
     setTurn(1);
-    setHandoff(false);
-    setFirstPicks(null);
     setDuel(null);
     setDuelSting(false);
   };
@@ -484,9 +489,8 @@ export default function App({ user }: { user: AuthUser | null }) {
   const avg = stats.rounds ? Math.round(stats.sum / stats.rounds) : 0;
   const soloPhase = phase === "picking" ? "Fichajes" : phase === "revealing" ? "Revelando" : "Final";
   const phaseLabel = mode === "duel"
-    ? (duel ? "Duelo · resultado" : `Jugador ${turn} · fichajes`)
+    ? (duel ? "Duelo · resultado" : `Jugador ${turn} ficha`)
     : soloPhase;
-  const fixLabel = mode === "duel" && turn === 1 ? "Fijar y pasar" : "Fijar";
   const duelWord = duel
     ? (duel.winner === null ? "Empate" : `Gana J${duel.winner}`)
     : "";
@@ -515,24 +519,6 @@ export default function App({ user }: { user: AuthUser | null }) {
               : `Error ${(duel.sides[duel.winner - 1].score.err * 100).toFixed(1)}%`}
           </span>
         </button>
-      )}
-
-      {handoff && (
-        // Tapa la mesa mientras el móvil cambia de manos. Solo se quita con el
-        // botón: un toque suelto al pasarlo no debe destaparla.
-        <div className="curtain" role="dialog" aria-modal="true" aria-label="Cambio de turno">
-          <div className="curtain-box">
-            <div className="curtain-eyebrow">Turno del jugador 1 cerrado</div>
-            <h2 className="curtain-title">Pásale el móvil</h2>
-            <p className="curtain-line">
-              Mismo reto, misma estadística. El jugador 2 ficha sin ver la plantilla del 1,
-              y las cifras salen cuando hayan jugado los dos.
-            </p>
-            <button className="btn primary" onClick={() => setHandoff(false)}>
-              Soy el jugador 2
-            </button>
-          </div>
-        </div>
       )}
 
       <header className="hud">
@@ -620,7 +606,11 @@ export default function App({ user }: { user: AuthUser | null }) {
         <div>
           <div className="phase">{phaseLabel} · 5 vs objetivo</div>
           <h2 className="stat-name">{challenge.stat.label}</h2>
-          <p className="stat-note">Elige cinco. Las cifras salen al final.</p>
+          <p className="stat-note">
+            {mode === "duel"
+              ? "Uno a uno. Un jugador no se puede repetir. Las cifras salen al final."
+              : "Elige cinco. Las cifras salen al final."}
+          </p>
         </div>
         <div className="targets">
           {shown > 0 && (
@@ -636,10 +626,10 @@ export default function App({ user }: { user: AuthUser | null }) {
         </div>
       </section>
 
-      {!duel && (
+      {!duel && mode === "solo" && (
         <>
           <div className="roster-label">
-            <span>{mode === "duel" ? `Plantilla · jugador ${turn}` : "Plantilla"}</span>
+            <span>Plantilla</span>
             <span>{filled}/{SLOTS}</span>
           </div>
           <div className="slots">
@@ -648,6 +638,32 @@ export default function App({ user }: { user: AuthUser | null }) {
             ))}
           </div>
         </>
+      )}
+
+      {!duel && mode === "duel" && (
+        <div className="draft-boards">
+          {([home, away] as const).map((roster, side) => (
+            <div key={side} className={"roster-block" + (turn === side + 1 && !duelReady ? " on" : "")}>
+              <div className="roster-label">
+                <span>Jugador {side + 1}{turn === side + 1 && !duelReady ? " · le toca" : ""}</span>
+                <span>{roster.filter(Boolean).length}/{SLOTS}</span>
+              </div>
+              <div className="slots">
+                {roster.map((p, i) => (
+                  <Slot
+                    key={`${side}-${i}`}
+                    n={i}
+                    pick={p}
+                    sport={challenge.sport}
+                    revealed={false}
+                    locked
+                    onRemove={() => {}}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {duel && (
@@ -700,14 +716,12 @@ export default function App({ user }: { user: AuthUser | null }) {
       <div className="draft">
         {!duel && (
           <Picker
-            // Al cambiar de jugador se remonta: el buscador y lo que hubiera
-            // escrito el anterior se van con él.
-            key={`${challenge.stat.id}-${turn}`}
+            key={`${challenge.stat.id}-${mode}-${turn}`}
             sport={challenge.sport}
             statId={challenge.stat.id}
-            picks={picks}
+            picks={draftTaken}
             onPick={place}
-            disabled={phase !== "picking"}
+            disabled={phase !== "picking" || (mode === "duel" && duelReady)}
           />
         )}
         {phase === "done"
@@ -715,15 +729,13 @@ export default function App({ user }: { user: AuthUser | null }) {
           : <button
               className="btn primary"
               onClick={reveal}
-              disabled={filled < SLOTS || phase !== "picking" || locking}
+              disabled={(mode === "duel" ? !duelReady : filled < SLOTS) || phase !== "picking" || locking}
             >
-              {fixLabel}
+              Fijar
             </button>}
       </div>
-      {phase === "picking" && filled === SLOTS && (
-        <span className="hint">
-          {mode === "duel" && turn === 1 ? "Plantilla lista. Fija y pasa el móvil." : "Plantilla lista. Fija."}
-        </span>
+      {phase === "picking" && (mode === "duel" ? duelReady : filled === SLOTS) && (
+        <span className="hint">Plantillas listas. Fija.</span>
       )}
 
       {result && phase === "done" && (

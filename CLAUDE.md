@@ -74,8 +74,9 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
 API ciega + catálogos en JSON. Login Google opcional: se puede jugar sin cuenta.
 Con sesión, las rondas se guardan y se ven en Perfil. Modo 2 jugadores en el
-mismo dispositivo (M6): mismo reto, se pasa el móvil, gana quien menos error
-tenga; el duelo no se guarda. Siguiente: playtest (M0) y lo que queda de M7.
+mismo dispositivo (M6): mismo reto, fichan uno a uno sin repetir jugador,
+gana quien menos error tenga; el duelo no se guarda. Siguiente: playtest
+(M0) y lo que queda de M7.
 Orden en `docs/tareas.md`.
 
 ## Idioma

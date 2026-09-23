@@ -290,6 +290,9 @@ body{
 }
 
 /* --- M6: dos jugadores, mismo móvil --- */
+.draft-boards{display:flex;flex-direction:column;gap:14px}
+.roster-block{padding:8px 8px 10px;border:1px solid var(--line);background:var(--panel)}
+.roster-block.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .modes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .mode-tab{
   padding:4px 10px;border:1px solid var(--line);background:var(--panel);

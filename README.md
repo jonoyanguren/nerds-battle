@@ -11,8 +11,8 @@ cifras** y al final descubres cuánto te has acercado.
 
 **Prototipo jugable.** Uno o dos jugadores, 6 estadísticas NBA, ~3000 jugadores
 por estadística. Las cifras viven en el servidor (`/api/challenge`,
-`/api/players`, `/api/reveal`). En **2 jugadores** se pasa el móvil: mismo reto,
-el segundo ficha sin ver al primero y gana quien menos error tenga; ese duelo no
+`/api/players`, `/api/reveal`). En **2 jugadores** fichan uno a uno el mismo
+reto, sin repetir jugador, y gana quien menos error tenga; ese duelo no
 se guarda en el perfil. Login Google opcional: pestaña **Juego / Perfil**. Con cuenta
 se guardan las rondas (récord, media, mejor por stat, historial). Sin cuenta,
 el HUD usa `localStorage`. Sin ranking público. En Vercel:

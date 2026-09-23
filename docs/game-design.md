@@ -64,18 +64,13 @@ Mismo reto para los dos, turnos alternos, y **gana quien menos error tenga**
 puntos tienen suelo en 0: dos plantillas malas empatarían a cero aunque una
 esté mucho más cerca. El empate existe y se enseña.
 
-Se juega en **el mismo dispositivo**, pasándose el móvil. Lo que era la pega
-—que el segundo no vea las elecciones del primero— se resuelve así:
+Se juega en **el mismo dispositivo**. Fichan **uno a uno** (J1, J2, J1…)
+sobre el **mismo pool**: un jugador no se puede repetir. Si uno rellenara
+los cinco huecos de golpe, se quedaría a todos los buenos.
 
-- La plantilla del primero se borra de la pantalla antes de tapar nada, así
-  que detrás de la cortina no queda nada suyo.
-- Las cifras de los dos se piden en **una sola llamada**, cuando ya han
-  jugado ambos. Si el primero revelara al terminar su turno, sus cifras
-  estarían en la misma pantalla que va a usar el segundo.
-- El buscador se reinicia al cambiar de manos.
-
-Un duelo no guarda `Round` ni toca el HUD: los dos comparten navegador y
-sesión, y el perfil es de una persona.
+Las cifras se piden en **una sola llamada** cuando las dos plantillas están
+completas. Un duelo no guarda `Round` ni toca el HUD: los dos comparten
+navegador y sesión, y el perfil es de una persona.
 
 Jugar a distancia (dos móviles) sigue sin construir, y no es solo fontanería:
 en cuanto el reto viaja por la red y la puntuación decide quién gana, hace

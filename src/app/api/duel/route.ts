@@ -10,9 +10,8 @@ export const dynamic = "force-dynamic";
 /**
  * M6: dos jugadores, el mismo reto, el mismo móvil.
  *
- * Las dos plantillas se revelan de una vez y no en dos llamadas para que el
- * primero no vea sus cifras mientras el segundo todavía está fichando: en el
- * mismo dispositivo, lo que aparece en pantalla lo ven los dos.
+ * Las dos plantillas se revelan de una vez. Un nombre no puede estar en las
+ * dos: fichan uno a uno sobre el mismo pool.
  *
  * No guarda `Round`. Los dos comparten sesión y navegador, así que la ronda
  * del rival acabaría en el perfil de quien tenga la cuenta abierta.
@@ -52,6 +51,9 @@ export async function POST(request: Request) {
   }
 
   const [a, b] = resolved as Extract<(typeof resolved)[number], { ok: true }>[];
+  if (a.names.some(name => b.names.includes(name))) {
+    return NextResponse.json({ error: "shared" }, { status: 400 });
+  }
   const scoreA = scoreRound(a.total, target);
   const scoreB = scoreRound(b.total, target);
 
