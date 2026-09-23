@@ -9,10 +9,11 @@ cifras** y al final descubres cuánto te has acercado.
 
 ## Estado
 
-**Prototipo jugable.** Dos catálogos —**NBA** y **Fútbol**—, 6 estadísticas
-cada uno y hasta 3000 jugadores por estadística. Las cifras viven en el
-servidor (`/api/challenge`, `/api/players`,
-`/api/reveal`). Login Google opcional: pestaña **Juego / Perfil**. Con cuenta
+**Prototipo jugable.** Uno o dos jugadores, 6 estadísticas NBA, ~3000 jugadores
+por estadística. Las cifras viven en el servidor (`/api/challenge`,
+`/api/players`, `/api/reveal`). En **2 jugadores** se pasa el móvil: mismo reto,
+el segundo ficha sin ver al primero y gana quien menos error tenga; ese duelo no
+se guarda en el perfil. Login Google opcional: pestaña **Juego / Perfil**. Con cuenta
 se guardan las rondas (récord, media, mejor por stat, historial). Sin cuenta,
 el HUD usa `localStorage`. Sin ranking público. En Vercel:
 https://nerds-battle-jonoyangurens-projects.vercel.app
@@ -40,7 +41,7 @@ Diseño del juego: [`docs/game-design.md`](docs/game-design.md).
 
 | Capa | Ahora | Destino |
 |---|---|---|
-| UI | Next.js + React 19 + Auth.js (Google) + Perfil | 2 jugadores |
+| UI | Next.js + React 19 + Auth.js (Google) + Perfil + duelo local | duelo a distancia |
 | Catálogo | `src/data.generated.json` (`npm run sync`) | más deportes (sigue en JSON) |
 | Cuentas / rondas | Prisma Postgres (`User`, `Round`) | ranking público |
 | Invitado | `localStorage` (récord / media / rondas) | igual |
@@ -92,7 +93,7 @@ La mecánica y la curva, en [`docs/game-design.md`](docs/game-design.md).
 - [x] M3 · Login con Google (Auth.js) + Perfil / rondas
 - [x] M4 · API ciega
 - [x] M5 · Cron → JSON
-- [ ] M6 · 2 jugadores
+- [x] M6 · 2 jugadores (mismo dispositivo)
 - [x] M7 · Deploy
 - [x] M8 · Segundo catálogo: fútbol
 - [ ] M0 · Playtest con colegas y ajustar la curva

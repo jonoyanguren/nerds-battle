@@ -10,7 +10,10 @@ import { Profile } from "./components/Profile";
 import type {
   CatalogPlayer,
   ChallengePayload,
+  DuelSide,
+  DuelWinner,
   LocalStats,
+  Mode,
   Phase,
   ProfilePayload,
   RosterPick,
@@ -245,6 +248,14 @@ export default function App({ user }: { user: AuthUser | null }) {
   const [locking, setLocking] = useState(false);
   const timers = useRef<number[]>([]);
 
+  // --- M6: dos jugadores, mismo móvil ---
+  const [mode, setMode] = useState<Mode>("solo");
+  const [turn, setTurn] = useState<1 | 2>(1);
+  const [handoff, setHandoff] = useState(false);
+  const [firstPicks, setFirstPicks] = useState<RosterPick[] | null>(null);
+  const [duel, setDuel] = useState<{ sides: [DuelSide, DuelSide]; winner: DuelWinner } | null>(null);
+  const [duelSting, setDuelSting] = useState(false);
+
   const applyProfile = (data: ProfilePayload) => {
     setProfile(data);
     setStats({ rounds: data.rounds, best: data.best, sum: data.sum });
@@ -304,10 +315,66 @@ export default function App({ user }: { user: AuthUser | null }) {
     setPicks(next);
   };
 
+  /** Cierra el turno del jugador 1 y tapa la pantalla para el cambio de manos. */
+  const passPhone = () => {
+    setFirstPicks(picks.filter((p): p is RosterPick => p !== null));
+    // La plantilla se vacía ANTES de levantar la cortina: así, cuando el
+    // segundo la quite, detrás no hay nada del primero que mirar.
+    setPicks(Array(SLOTS).fill(null));
+    setTurn(2);
+    setHandoff(true);
+  };
+
+  const revealDuel = async () => {
+    if (!challenge || !firstPicks) return;
+    const second = picks.filter((p): p is RosterPick => p !== null);
+    setLocking(true);
+    try {
+      // Una sola llamada con las dos plantillas: si el primero revelara por
+      // su cuenta, sus cifras estarían en la misma pantalla que va a usar el
+      // segundo. Y el ganador lo decide el motor, en el servidor.
+      const res = await fetch("/api/duel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sport: challenge.sport.id,
+          stat: challenge.stat.id,
+          target: challenge.target,
+          rosters: [firstPicks.map(p => p.name), second.map(p => p.name)],
+        }),
+      });
+      if (!res.ok) throw new Error("duel");
+      const data = await res.json() as {
+        sides: ({ values: number[]; total: number } & RoundScore)[];
+        winner: DuelWinner;
+      };
+      const withValues = (roster: RosterPick[], i: number) =>
+        roster.map((p, j) => ({ ...p, value: data.sides[i].values[j] }));
+      setDuel({
+        sides: [
+          { picks: withValues(firstPicks, 0), total: data.sides[0].total, score: data.sides[0] },
+          { picks: withValues(second, 1), total: data.sides[1].total, score: data.sides[1] },
+        ],
+        winner: data.winner,
+      });
+      setPhase("done");
+      setDuelSting(true);
+      timers.current.push(window.setTimeout(() => setDuelSting(false), 2400));
+    } catch {
+      setLocking(false);
+    }
+  };
+
   const reveal = async () => {
     if (!challenge || locking || phase !== "picking") return;
     const names = picks.map(p => p?.name);
     if (names.some(n => !n)) return;
+
+    if (mode === "duel") {
+      if (turn === 1) return passPhone();
+      return revealDuel();
+    }
+
     setLocking(true);
     try {
       const res = await fetch("/api/reveal", {
@@ -351,15 +418,32 @@ export default function App({ user }: { user: AuthUser | null }) {
     }
   };
 
-  const nextRound = async () => {
-    if (!challenge) return;
+  /** Deja la mesa como al empezar, en cualquiera de los dos modos. */
+  const resetRound = () => {
     timers.current.forEach(clearTimeout);
+    timers.current = [];
     setPicks(Array(SLOTS).fill(null));
     setShown(0);
     setPhase("picking");
     setSting(null);
     setResult(null);
     setLocking(false);
+    setTurn(1);
+    setHandoff(false);
+    setFirstPicks(null);
+    setDuel(null);
+    setDuelSting(false);
+  };
+
+  const selectMode = (next: Mode) => {
+    if (next === mode || locking || phase === "revealing") return;
+    resetRound();
+    setMode(next);
+  };
+
+  const nextRound = async () => {
+    if (!challenge) return;
+    resetRound();
     try {
       const data = await fetchChallenge(challenge.sport.id, challenge.stat.id);
       setChallenge(data);
@@ -370,14 +454,8 @@ export default function App({ user }: { user: AuthUser | null }) {
 
   const selectSport = async (id: string) => {
     if (id === sportId || locking || phase === "revealing") return;
-    timers.current.forEach(clearTimeout);
+    resetRound();
     setSportId(id);
-    setPicks(Array(SLOTS).fill(null));
-    setShown(0);
-    setPhase("picking");
-    setSting(null);
-    setResult(null);
-    setLocking(false);
     setChallenge(null);
     try {
       const data = await fetchChallenge(id, null);
@@ -404,7 +482,14 @@ export default function App({ user }: { user: AuthUser | null }) {
   const boardPts = useCountUp(boardOn ? (result?.points ?? 0) : 0, COUNT_SCORE_MS);
 
   const avg = stats.rounds ? Math.round(stats.sum / stats.rounds) : 0;
-  const phaseLabel = phase === "picking" ? "Fichajes" : phase === "revealing" ? "Revelando" : "Final";
+  const soloPhase = phase === "picking" ? "Fichajes" : phase === "revealing" ? "Revelando" : "Final";
+  const phaseLabel = mode === "duel"
+    ? (duel ? "Duelo · resultado" : `Jugador ${turn} · fichajes`)
+    : soloPhase;
+  const fixLabel = mode === "duel" && turn === 1 ? "Fijar y pasar" : "Fijar";
+  const duelWord = duel
+    ? (duel.winner === null ? "Empate" : `Gana J${duel.winner}`)
+    : "";
 
   const grade = result && phase === "done" ? stingOf(result.err) : null;
 
@@ -415,6 +500,39 @@ export default function App({ user }: { user: AuthUser | null }) {
           <span className="sting-word">{STING_LABEL[sting]}</span>
           {result && <span className="sting-sub">{result.verdict.title}</span>}
         </button>
+      )}
+
+      {duelSting && duel && (
+        <button
+          type="button"
+          className={`sting sting-${duel.winner === null ? "close" : "hit"}`}
+          onClick={() => setDuelSting(false)}
+        >
+          <span className="sting-word">{duelWord}</span>
+          <span className="sting-sub">
+            {duel.winner === null
+              ? "Mismo error los dos"
+              : `Error ${(duel.sides[duel.winner - 1].score.err * 100).toFixed(1)}%`}
+          </span>
+        </button>
+      )}
+
+      {handoff && (
+        // Tapa la mesa mientras el móvil cambia de manos. Solo se quita con el
+        // botón: un toque suelto al pasarlo no debe destaparla.
+        <div className="curtain" role="dialog" aria-modal="true" aria-label="Cambio de turno">
+          <div className="curtain-box">
+            <div className="curtain-eyebrow">Turno del jugador 1 cerrado</div>
+            <h2 className="curtain-title">Pásale el móvil</h2>
+            <p className="curtain-line">
+              Mismo reto, misma estadística. El jugador 2 ficha sin ver la plantilla del 1,
+              y las cifras salen cuando hayan jugado los dos.
+            </p>
+            <button className="btn primary" onClick={() => setHandoff(false)}>
+              Soy el jugador 2
+            </button>
+          </div>
+        </div>
       )}
 
       <header className="hud">
@@ -444,6 +562,26 @@ export default function App({ user }: { user: AuthUser | null }) {
                     <span>{s.name}</span>
                   </button>
                 ))}
+              </nav>
+              <nav className="modes" aria-label="Modo de juego">
+                <button
+                  type="button"
+                  className={"mode-tab" + (mode === "solo" ? " on" : "")}
+                  aria-pressed={mode === "solo"}
+                  disabled={locking || phase === "revealing"}
+                  onClick={() => selectMode("solo")}
+                >
+                  1 jugador
+                </button>
+                <button
+                  type="button"
+                  className={"mode-tab" + (mode === "duel" ? " on" : "")}
+                  aria-pressed={mode === "duel"}
+                  disabled={locking || phase === "revealing"}
+                  onClick={() => selectMode("duel")}
+                >
+                  2 jugadores
+                </button>
               </nav>
               {challenge && (
                 <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
@@ -498,18 +636,80 @@ export default function App({ user }: { user: AuthUser | null }) {
         </div>
       </section>
 
-      <div className="roster-label">
-        <span>Plantilla</span>
-        <span>{filled}/{SLOTS}</span>
-      </div>
-      <div className="slots">
-        {picks.map((p, i) => (
-          <Slot key={i} n={i} pick={p} sport={challenge.sport} revealed={i < shown} onRemove={() => remove(i)} />
-        ))}
-      </div>
+      {!duel && (
+        <>
+          <div className="roster-label">
+            <span>{mode === "duel" ? `Plantilla · jugador ${turn}` : "Plantilla"}</span>
+            <span>{filled}/{SLOTS}</span>
+          </div>
+          <div className="slots">
+            {picks.map((p, i) => (
+              <Slot key={i} n={i} pick={p} sport={challenge.sport} revealed={i < shown} onRemove={() => remove(i)} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {duel && (
+        <section className="duel">
+          <div className="duel-head">
+            <span>Objetivo {fmt(challenge.target)}</span>
+            <b>{duelWord}</b>
+          </div>
+          <div className="duel-grid">
+            {duel.sides.map((side, i) => (
+              <div
+                key={i}
+                className={
+                  "duel-side" +
+                  (duel.winner === i + 1 ? " win" : "") +
+                  (duel.winner !== null && duel.winner !== i + 1 ? " lose" : "")
+                }
+              >
+                <div className="duel-who">
+                  <span>Jugador {i + 1}</span>
+                  {duel.winner === i + 1 && <em>gana</em>}
+                  {duel.winner === null && <em>empate</em>}
+                </div>
+                <div className="duel-nums">
+                  <div><span>Suma</span><b>{fmt(side.total)}</b></div>
+                  <div>
+                    <span>Diff</span>
+                    <b style={{ color: side.score.diff === 0 ? "var(--good)" : side.score.diff > 0 ? "var(--accent)" : "var(--bad)" }}>
+                      {side.score.diff > 0 ? "+" : ""}{fmt(side.score.diff)}
+                    </b>
+                  </div>
+                  <div><span>Error</span><b>{(side.score.err * 100).toFixed(1)}%</b></div>
+                </div>
+                <ul className="duel-picks">
+                  {side.picks.map(p => (
+                    <li key={p.name} className="duel-pick">
+                      <Face player={p} sport={challenge.sport} size="list" />
+                      <span className="duel-pick-name">{p.name}</span>
+                      <span className="duel-pick-value">{fmt(p.value ?? 0)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="duel-verdict">{side.score.verdict.title}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="draft">
-        <Picker sport={challenge.sport} statId={challenge.stat.id} picks={picks} onPick={place} disabled={phase !== "picking"} />
+        {!duel && (
+          <Picker
+            // Al cambiar de jugador se remonta: el buscador y lo que hubiera
+            // escrito el anterior se van con él.
+            key={`${challenge.stat.id}-${turn}`}
+            sport={challenge.sport}
+            statId={challenge.stat.id}
+            picks={picks}
+            onPick={place}
+            disabled={phase !== "picking"}
+          />
+        )}
         {phase === "done"
           ? <button className="btn primary" onClick={nextRound}>Siguiente</button>
           : <button
@@ -517,10 +717,14 @@ export default function App({ user }: { user: AuthUser | null }) {
               onClick={reveal}
               disabled={filled < SLOTS || phase !== "picking" || locking}
             >
-              Fijar
+              {fixLabel}
             </button>}
       </div>
-      {phase === "picking" && filled === SLOTS && <span className="hint">Plantilla lista. Fija.</span>}
+      {phase === "picking" && filled === SLOTS && (
+        <span className="hint">
+          {mode === "duel" && turn === 1 ? "Plantilla lista. Fija y pasa el móvil." : "Plantilla lista. Fija."}
+        </span>
+      )}
 
       {result && phase === "done" && (
         <section className={`result result-${grade}`}>
