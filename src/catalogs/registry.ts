@@ -1,8 +1,9 @@
 import { NBA_SPORT } from "./nba/sport";
+import { FOOTBALL_SPORT } from "./futbol/sport";
 import type { Sport } from "../types";
 
 /** Solo meta. Importable desde el cliente: no tira del JSON de cifras. */
-export const SPORTS: Sport[] = [NBA_SPORT];
+export const SPORTS: Sport[] = [NBA_SPORT, FOOTBALL_SPORT];
 
 export const DEFAULT_SPORT_ID = NBA_SPORT.id;
 

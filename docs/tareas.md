@@ -95,6 +95,23 @@ llamada: si el primero viera sus cifras, el segundo las vería también.
 - [x] Deploy Vercel
 - [ ] Comprobar en el móvil: una ronda
 
+### M8 · Segundo catálogo: fútbol
+
+Sale del cajón de «Aún no» porque el motor ya estaba listo y lo caro eran
+los datos, no el código. Cinco categorías: goles y asistencias en la
+Premier, partidos en Champions y en LaLiga, y goles con la selección.
+
+- [x] `npm run sync:football` con modo informe: mide cada categoría antes
+      de elegirla, en vez de escogerlas a ojo
+- [x] `src/football.generated.json` desde dos fuentes CC0
+- [x] `src/catalogs/futbol/` + logo + registro
+- [x] Ficha completa en `docs/datos.md`: qué contiene, de dónde y qué no cubre
+
+Lo que hay que saber: los clubes solo cubren de 2012 en adelante y esa
+fuente ya no se actualiza, así que el fútbol no tiene cron. Por eso se
+dejó fuera «goles en LaLiga» pese a tener buena curva: Messi saldría con
+305 y no con 474, y esa sí la gente se la sabe. Todo en `docs/datos.md`.
+
 ## Al final — M0 · Colegas
 
 - [ ] Mandar el enlace a 3–5 colegas
@@ -104,7 +121,7 @@ llamada: si el primero viera sus cifras, el segundo las vería también.
 
 ## Aún no
 
-Más catálogos (fútbol, Pokémon…), ranking global, reto diario, mostrar cifras
+Más catálogos (Pokémon…), ranking global, reto diario, mostrar cifras
 antes de tiempo, ordenar el buscador por stat.
 
 Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
@@ -119,4 +136,6 @@ Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 | M2 | Catálogos = JSON. Postgres = users / partidas / ranking (M3 en adelante). |
 | M3 | Tabla `users` la crea Auth.js. |
 | perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
+| M6 | ¿Mismo dispositivo o dos móviles? |
+| M8 | Fútbol: clubes desde 2012 y sin cron (la fuente está parada). Se etiqueta en vez de ocultarse. |
 | M6 | Mismo dispositivo: se pasa el móvil. Dos sesiones pediría retos emitidos por el servidor. |
