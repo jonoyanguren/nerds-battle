@@ -57,8 +57,26 @@ Perfil muestra objetivo, suma, error y la plantilla. Sin cuenta, el HUD
 sigue en `localStorage`. No hay ranking público: comparar con otros espera
 a que haya playtest (M0) y, si se compara, retos emitidos por el servidor.
 
-## Modo 2 jugadores (sin construir)
+## Modo 2 jugadores
 
-Mismo reto para los dos. Turnos alternos o simultáneos a ciegas. Gana quien menos
-error tenga. Pendiente: si juegan en el mismo dispositivo, el segundo no puede
-ver las elecciones del primero.
+Mismo reto para los dos, turnos alternos, y **gana quien menos error tenga**
+(`duelWinner` en el motor). Se compara el error y no los puntos porque los
+puntos tienen suelo en 0: dos plantillas malas empatarían a cero aunque una
+esté mucho más cerca. El empate existe y se enseña.
+
+Se juega en **el mismo dispositivo**, pasándose el móvil. Lo que era la pega
+—que el segundo no vea las elecciones del primero— se resuelve así:
+
+- La plantilla del primero se borra de la pantalla antes de tapar nada, así
+  que detrás de la cortina no queda nada suyo.
+- Las cifras de los dos se piden en **una sola llamada**, cuando ya han
+  jugado ambos. Si el primero revelara al terminar su turno, sus cifras
+  estarían en la misma pantalla que va a usar el segundo.
+- El buscador se reinicia al cambiar de manos.
+
+Un duelo no guarda `Round` ni toca el HUD: los dos comparten navegador y
+sesión, y el perfil es de una persona.
+
+Jugar a distancia (dos móviles) sigue sin construir, y no es solo fontanería:
+en cuanto el reto viaja por la red y la puntuación decide quién gana, hace
+falta que el reto lo emita y lo valide el servidor.

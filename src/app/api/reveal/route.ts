@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getCatalog } from "@/catalogs/load";
 import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
-import { SLOTS, scoreRound } from "@/engine";
+import { scoreRound } from "@/engine";
+import { resolveRoster } from "@/lib/roster";
 import { saveRound } from "@/lib/rounds";
 import { hasStat } from "@/types";
 
@@ -30,25 +31,11 @@ export async function POST(request: Request) {
   ) {
     return NextResponse.json({ error: "fields" }, { status: 400 });
   }
-  if (!Array.isArray(names) || names.length !== SLOTS || names.some(n => typeof n !== "string")) {
-    return NextResponse.json({ error: "names" }, { status: 400 });
+  const roster = resolveRoster(catalog.players[stat], names);
+  if (!roster.ok) {
+    return NextResponse.json({ error: roster.error }, { status: 400 });
   }
-  const typedNames = names as string[];
-  if (new Set(typedNames).size !== SLOTS) {
-    return NextResponse.json({ error: "duplicate" }, { status: 400 });
-  }
-  const list = catalog.players[stat];
-  const values: number[] = [];
-  const photoIds: string[] = [];
-  for (const name of typedNames) {
-    const player = list.find(p => p.name === name);
-    if (!player) {
-      return NextResponse.json({ error: "unknown player" }, { status: 400 });
-    }
-    values.push(player.value);
-    photoIds.push(player.photoId);
-  }
-  const total = values.reduce((a, b) => a + b, 0);
+  const { names: typedNames, values, photoIds, total } = roster;
   const score = scoreRound(total, target);
 
   const session = await auth();

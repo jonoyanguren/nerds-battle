@@ -1,5 +1,5 @@
 import { SLOTS } from "./format";
-import type { Catalog, Challenge, RoundScore, Verdict } from "./types";
+import type { Catalog, Challenge, DuelWinner, RoundScore, Verdict } from "./types";
 
 export { SLOTS } from "./format";
 
@@ -39,4 +39,19 @@ export function scoreRound(total: number, target: number): RoundScore {
   const points = Math.max(0, Math.round(1000 * (1 - err * 5)));
   const verdict = VERDICTS.find(v => err <= v.max) ?? VERDICTS[VERDICTS.length - 1];
   return { diff, err, points, verdict };
+}
+
+/**
+ * Duelo al mismo reto: gana quien menos error tenga (`docs/game-design.md`).
+ *
+ * Se compara el error y no los puntos porque los puntos tienen suelo en 0:
+ * dos plantillas malísimas empatarían a cero aunque una esté mucho más cerca.
+ *
+ * `null` es empate: misma plantilla, o dos desvíos iguales en sentidos
+ * opuestos (uno se pasa un 4%, el otro se queda un 4% corto).
+ */
+export function duelWinner(a: RoundScore, b: RoundScore): DuelWinner {
+  if (a.err < b.err) return 1;
+  if (b.err < a.err) return 2;
+  return null;
 }

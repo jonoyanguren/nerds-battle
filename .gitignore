@@ -6,3 +6,4 @@ dist/
 .next/
 .vercel/
 src/generated/
+tsconfig.tsbuildinfo
