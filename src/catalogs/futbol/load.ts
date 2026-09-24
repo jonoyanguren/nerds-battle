@@ -3,15 +3,17 @@ import { SLOTS } from "../../format";
 import type { Catalog, Player } from "../../types";
 import { FOOTBALL_SPORT, FOOTBALL_STATS } from "./sport";
 
-type GeneratedPlayer = { name: string; value: number };
+type GeneratedPlayer = { name: string; value: number; photoId?: string };
 
 const raw = generated.players as Record<string, GeneratedPlayer[]>;
 
 const players: Record<string, Player[]> = {};
 for (const [statId, list] of Object.entries(raw)) {
-  // Sin foto: `photoId` vacío hace que el hueco enseñe las iniciales en vez
-  // de pedir una imagen que no existe.
-  players[statId] = list.map(p => ({ name: p.name, value: p.value, photoId: "" }));
+  players[statId] = list.map(p => ({
+    name: p.name,
+    value: p.value,
+    photoId: p.photoId ?? "",
+  }));
 }
 
 export function loadFootball(): Catalog {

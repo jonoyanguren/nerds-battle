@@ -20,7 +20,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
 - `src/catalogs/futbol/` — segundo catálogo. Cifras en `src/football.generated.json`,
-  que genera `scripts/sync-football.mjs`. Sin fotos: se ven las iniciales.
+  que genera `scripts/sync-football.mjs`. Fotos del CDN de Transfermarkt
+  (`photoId` = archivo con timestamp); si no hay retrato, iniciales.
 - `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
 - `src/lib/roster.ts` — valida 5 nombres y les saca las cifras. Lo usan

@@ -4,15 +4,16 @@ import type { Sport, Stat } from "../../types";
  * Meta ciega: el cliente puede verla. Las cifras viven en
  * `src/football.generated.json`, que genera `npm run sync:football`.
  *
- * Sin `photoUrl`: no hay CDN de fotos de futbolistas al que tirar, así que
- * los huecos enseñan las iniciales. La NBA sí tiene y por eso lo usa.
+ * Fotos: CDN de Transfermarkt. El `photoId` es el archivo con timestamp
+ * (`10-1448468291.jpg`); el id suelto da 404. Quien no cruce en el sync
+ * se queda sin `photoId` y Face enseña las iniciales.
  */
 export const FOOTBALL_SPORT: Sport = {
   id: "futbol",
   name: "Fútbol",
   scope: "Clubes y selecciones",
   logo: "/sports/futbol.svg",
-  photoUrl: "",
+  photoUrl: "https://img.a.transfermarkt.technology/portrait/header/{id}",
 };
 
 /**

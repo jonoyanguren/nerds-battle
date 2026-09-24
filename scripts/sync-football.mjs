@@ -8,6 +8,10 @@
  * Uso:
  *   npm run sync:football          analiza e imprime el informe
  *   npm run sync:football -- --write   además escribe src/football.generated.json
+ *   npm run sync:football -- --photos-only
+ *       pega photoId en el JSON que ya hay, sin volver a bajar las cifras.
+ *       Las fotos salen de players.csv (image_url). Quien no cruce se
+ *       queda sin photoId y Face enseña las iniciales.
  *
  * El informe va antes que el archivo a propósito: las cifras hay que verlas
  * para elegir categorías. Una estadística con objetivos de 30 castiga fallar
@@ -18,12 +22,13 @@
 import { createGunzip } from "node:zlib";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
-import { writeFileSync, renameSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, renameSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const WRITE = process.argv.includes("--write");
+const PHOTOS_ONLY = process.argv.includes("--photos-only");
 
 /**
  * Dónde se guarda. Por defecto, donde lo quiere el repo.
@@ -89,6 +94,13 @@ const CATEGORIAS = [
 const log = (...a) => console.log(...a);
 const add = (map, key, n = 1) => map.set(key, (map.get(key) || 0) + n);
 const ranking = map => [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const foldName = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/** El CDN pide el archivo con timestamp (`10-1448468291.jpg`); el id solo da 404. */
+function fotoDeUrl(url) {
+  const m = String(url || "").match(/\/portrait\/header\/([^/?#]+)/);
+  return m ? m[1] : "";
+}
 
 /** Divide una línea CSV respetando las comillas. */
 function splitCsv(line) {
@@ -163,6 +175,63 @@ async function eachTable(name, onRow) {
     return r;
   }
   throw new Error(`No se encontró la tabla ${name} en ${TM}`);
+}
+
+/**
+ * name → archivo del retrato. Si hay dos con el mismo nombre plegado, se
+ * queda el más reciente (last_season) y, a empate, el de más valor.
+ */
+async function mapaFotos() {
+  const byFold = new Map();
+  await eachTable("players", row => {
+    const file = fotoDeUrl(row.image_url);
+    if (!file || !row.name) return;
+    const key = foldName(row.name);
+    const cand = {
+      file,
+      season: Number(row.last_season) || 0,
+      value: Number(row.market_value_in_eur) || 0,
+    };
+    const prev = byFold.get(key);
+    if (!prev || cand.season > prev.season || (cand.season === prev.season && cand.value > prev.value)) {
+      byFold.set(key, cand);
+    }
+  });
+  return byFold;
+}
+
+function buscarFoto(nombre, byFold) {
+  const key = foldName(nombre);
+  const hit = byFold.get(key);
+  if (hit) return hit.file;
+  const parts = key.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    const rev = [parts[parts.length - 1], ...parts.slice(0, -1)].join(" ");
+    return byFold.get(rev)?.file ?? "";
+  }
+  return "";
+}
+
+function conFotos(players, byFold) {
+  let ok = 0, no = 0;
+  const out = {};
+  for (const [id, list] of Object.entries(players)) {
+    let statOk = 0, statNo = 0;
+    out[id] = list.map(p => {
+      const photoId = buscarFoto(p.name, byFold);
+      if (photoId) { ok++; statOk++; }
+      else { no++; statNo++; }
+      return photoId ? { name: p.name, value: p.value, photoId } : { name: p.name, value: p.value };
+    });
+    log(`   ${id}: ${statOk} con retrato · ${statNo} iniciales`);
+  }
+  log(`   total: ${ok} con retrato · ${no} sin`);
+  return out;
+}
+
+function escribe(out) {
+  writeFileSync(TMP, `${JSON.stringify(out, null, 2)}\n`);
+  renameSync(TMP, OUT);
 }
 
 /** Cómo de jugable es una estadística: simula objetivos como hace el motor. */
@@ -296,6 +365,26 @@ function informe(stats, etiquetas) {
 
 // ---------------------------------------------------------------------- main
 
+if (PHOTOS_ONLY) {
+  if (!existsSync(OUT)) {
+    log(`No está ${OUT}. Primero: npm run sync:football -- --write`);
+    process.exit(1);
+  }
+  const current = JSON.parse(readFileSync(OUT, "utf8"));
+  log("\n▪ Fotos (players.csv, sin tocar cifras)");
+  try {
+    const byFold = await mapaFotos();
+    current.players = conFotos(current.players, byFold);
+    escribe(current);
+    log(`\nOK ${OUT}  fotos pegadas, updatedAt=${current.updatedAt}`);
+  } catch (e) {
+    log(`\n⚠  No se pudieron leer las fotos: ${e.message}`);
+    log("   El JSON no se toca.");
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
 const { stats: sel, hasta: fechaSelecciones } = await selecciones();
 
 // Si la fuente de clubes no responde se sigue con lo que haya: el informe es
@@ -363,6 +452,13 @@ const out = {
   source: "martj42/international_results + dcaribou/transfermarkt-datasets",
   players,
 };
-writeFileSync(TMP, `${JSON.stringify(out, null, 2)}\n`);
-renameSync(TMP, OUT);
+try {
+  log("\n▪ Fotos (players.csv)");
+  const byFold = await mapaFotos();
+  out.players = conFotos(out.players, byFold);
+} catch (e) {
+  log(`\n⚠  Cifras escritas sin fotos: ${e.message}`);
+}
+
+escribe(out);
 log(`\nOK ${OUT}  ${CATEGORIAS.length} categorías  updatedAt=${out.updatedAt}`);

@@ -33,7 +33,7 @@ completa (ver «Lo que se descartó»).
 | Se regenera con | `npm run sync:football -- --write` |
 | Cron | **No hay.** Ver limitaciones |
 | Tamaño | 5 categorías, hasta 3.000 jugadores cada una |
-| Fotos | No. Los huecos enseñan las iniciales |
+| Fotos | Sí, CDN de Transfermarkt por `image_url` (archivo con timestamp). Quien no cruce, iniciales |
 
 ### Qué contiene
 
@@ -93,8 +93,11 @@ que clavar el objetivo exacto es mucho más difícil ahí que en las categorías
 sin recortar. Si en el playtest se nota, hay dos salidas: subir el tope o
 sembrar el objetivo de un tramo más estrecho.
 
-**5. Sin fotos.** No hay un CDN abierto de futbolistas equivalente al de la
-NBA, así que `photoUrl` va vacío y `Face` enseña las iniciales.
+**5. Fotos de Transfermarkt, no de todos.** El dataset de clubes trae
+`image_url`. Se guarda el archivo (`10-1448468291.jpg`): el id suelto da 404.
+Las categorías de club cruzan casi todas; en goles de selección (desde 1916)
+faltan muchos nombres antiguos y esos huecos van a iniciales. El mismo
+matiz de licencia que las cifras: el repo es CC0, el CDN de fotos no.
 
 **6. La fecha que se ve es la del dato, no la de la descarga.** El juego
 muestra `2026-06-28`, que es hasta donde llega la fuente más rezagada de las
