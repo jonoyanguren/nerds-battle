@@ -21,7 +21,7 @@ export function Face({
   if (broken || !src) {
     return (
       <span
-        className={`face face-fallback face-${size}`}
+        className={`face face-fallback face-${size} face-${sport.id}`}
         style={{ "--face-tone": fallbackTone(player.name) } as CSSProperties}
       >
         {initials(player.name)}
@@ -30,7 +30,7 @@ export function Face({
   }
   return (
     <img
-      className={`face face-${size}`}
+      className={`face face-${size} face-${sport.id}`}
       src={src}
       alt=""
       onError={() => setBroken(true)}

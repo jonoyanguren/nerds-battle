@@ -13,7 +13,7 @@ export const FOOTBALL_SPORT: Sport = {
   name: "Fútbol",
   scope: "Clubes y selecciones",
   logo: "/sports/futbol.svg",
-  photoUrl: "https://img.a.transfermarkt.technology/portrait/header/{id}",
+  photoUrl: "https://img.a.transfermarkt.technology/portrait/big/{id}",
 };
 
 /**
