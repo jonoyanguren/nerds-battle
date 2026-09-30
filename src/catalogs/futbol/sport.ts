@@ -14,6 +14,7 @@ export const FOOTBALL_SPORT: Sport = {
   scope: "Clubes y selecciones",
   logo: "/sports/futbol.svg",
   photoUrl: "https://img.a.transfermarkt.technology/portrait/big/{id}",
+  category: "equipo",
 };
 
 /**

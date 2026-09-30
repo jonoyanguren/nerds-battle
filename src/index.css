@@ -52,7 +52,14 @@ body{
 .wordmark{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:.85;letter-spacing:.02em;margin:0}
 .wordmark em{font-style:normal;color:var(--accent)}
 .hud-meta{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.sports{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sports{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;align-items:center}
+/* La familia va delante de sus pastillas, en la misma fila. Etiquetarlas
+   en una fila aparte añadiría altura justo donde menos sobra. */
+.sport-group{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.sport-group-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:#5C6776;
+}
 .sport-tab{
   display:inline-flex;align-items:center;gap:7px;
   padding:5px 10px 5px 6px;border:1px solid var(--line);background:var(--panel);

@@ -1,9 +1,15 @@
+/** Familia a la que pertenece un catálogo. Con dos deportes daba igual;
+ *  con seis, una fila de pastillas sueltas no dice nada y no cabe en un
+ *  móvil. Cada catálogo declara la suya y el selector se agrupa solo. */
+export type SportCategory = "equipo" | "motor" | "individual";
+
 export type Sport = {
   id: string;
   name: string;
   scope: string;
   logo: string;
   photoUrl: string;
+  category: SportCategory;
 };
 
 export type Stat = {

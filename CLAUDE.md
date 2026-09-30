@@ -16,7 +16,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 ## Dónde está cada cosa
 
 - `src/types.ts` — contrato de datos y tipos del motor.
-- `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto). Ciego, cliente OK.
+- `src/catalogs/registry.ts` — lista de deportes (id, nombre, logo, plantilla de foto,
+  familia) y `sportGroups()`, que agrupa el selector. Ciego, cliente OK.
 - `src/catalogs/load.ts` — carga un catálogo (stats + PLAYERS). Solo servidor.
 - `src/catalogs/nba/` — primer catálogo. Meta en `sport.ts`; cifras en `src/data.generated.json`.
 - `src/catalogs/futbol/` — segundo catálogo. Cifras en `src/football.generated.json`,

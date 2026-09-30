@@ -7,6 +7,7 @@ export const NBA_SPORT: Sport = {
   scope: "Carrera",
   logo: "/sports/nba.svg",
   photoUrl: "https://cdn.nba.com/headshots/nba/latest/260x190/{id}.png",
+  category: "equipo",
 };
 
 export const NBA_STATS: Stat[] = [

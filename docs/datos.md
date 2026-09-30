@@ -209,7 +209,9 @@ habría que revisarlo.
 1. Un script en `scripts/` que deje un `*.generated.json` con
    `{ updatedAt, source, players: { statId: [{ name, value }] } }`.
 2. `src/catalogs/<id>/sport.ts` con la meta y las categorías, cada una con su
-   `note` diciendo desde cuándo cuenta.
+   `note` diciendo desde cuándo cuenta. La meta lleva `category`: de qué
+   familia es (`equipo`, `motor` o `individual`). El selector se agrupa solo
+   a partir de ahí, sin tocar la UI.
 3. `src/catalogs/<id>/load.ts` que lo lea y devuelva un `Catalog`.
 4. Logo en `public/sports/`.
 5. Una línea en `registry.ts` y otra en `catalogs/load.ts`.

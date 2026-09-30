@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
-import { SPORTS, DEFAULT_SPORT_ID } from "./catalogs/registry";
+import { SPORTS, DEFAULT_SPORT_ID, sportGroups } from "./catalogs/registry";
 import { SLOTS, fold, fmt, fmtDate } from "./format";
 import { loadStats, saveStats } from "./storage";
 import { AuthButton, type AuthUser } from "./components/AuthButton";
@@ -534,19 +534,27 @@ export default function App({ user }: { user: AuthUser | null }) {
           </nav>
           {tab === "play" && (
             <>
+              {/* Agrupado por familia. Con dos o tres catálogos esto es una
+                  fila y no se nota; con seis es lo que evita una ristra de
+                  pastillas sueltas que no caben en un móvil. */}
               <nav className="sports" aria-label="Catálogo">
-                {SPORTS.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
-                    aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
-                    disabled={SPORTS.length === 1 || locking || phase === "revealing"}
-                    onClick={() => selectSport(s.id)}
-                  >
-                    <img src={s.logo} alt="" width={20} height={20} />
-                    <span>{s.name}</span>
-                  </button>
+                {sportGroups().map(group => (
+                  <div key={group.category} className="sport-group" role="group" aria-label={group.label}>
+                    <span className="sport-group-label" aria-hidden="true">{group.label}</span>
+                    {group.sports.map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
+                        aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
+                        disabled={SPORTS.length === 1 || locking || phase === "revealing"}
+                        onClick={() => selectSport(s.id)}
+                      >
+                        <img src={s.logo} alt="" width={20} height={20} />
+                        <span>{s.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </nav>
               <nav className="modes" aria-label="Modo de juego">
