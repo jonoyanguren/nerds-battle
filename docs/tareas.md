@@ -160,6 +160,51 @@ catálogo sí puede tener cron**, al revés que el fútbol.
 Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 `public/sports/`, registrar en `registry.ts` y `catalogs/load.ts`.
 
+### Fuentes ya miradas: no volver a empezar de cero
+
+Buscando catálogos nuevos se revisaron estas. Está aquí para que nadie
+repita el camino.
+
+- **Ciclismo** — [`jenslemb/cyclingdata`](https://github.com/jenslemb/cyclingdata)
+  parecía perfecto: 11.125 etapas de 1903 a 2024, once carreras con Vuelta,
+  Tour, Giro, Itzulia y Volta a Catalunya, licencia MIT. Se descargó, se
+  escribió un lector del formato `.rda` y se abrió. **No contiene ni un
+  solo nombre de ciclista.** Sus 18 columnas describen la *etapa*
+  —distancia, desnivel, terreno, cómo se ganó— y lo más parecido a un
+  corredor es `avg_speed_winner`, que es una velocidad, no una persona.
+  Comprobados también `josselingirault/procyclingstats.com-webscraper`
+  (solo ficha del corredor; «fetch result data» sigue sin tachar en su
+  propio TODO) y `BD4vid777/Cycling_API`. **No hay ninguna fuente publicada
+  con totales de carrera por ciclista**: todos los caminos acaban en raspar
+  ProCyclingStats uno mismo.
+- **MotoGP** — `k06aditya/MotoGP-Historical-Dataset` tiene 1949–2025 y **le
+  falta el archivo de licencia**, o sea todos los derechos reservados por
+  defecto. `vishwapramuditha/moto-db` sí es CC0, pero solo cubre 2025–2026
+  y sus pilotos son nombre, país y dorsal, sin un solo total. Los CC0 de
+  Kaggle piden autenticación y no valen para un cron. Pedida licencia al
+  primero; si la añade, se desbloquea entero.
+- **ACB** — no existe dataset publicado, solo herramientas que raspan
+  acb.com en directo. Peor caso que el fútbol: allí al menos alguien
+  publicó el volcado con licencia y asumió él ese paso.
+- **Tenis** — los cuatro repositorios de Jeff Sackmann están borrados.
+  Quedan espejos de terceros con licencia **NonCommercial**.
+- **Béisbol** — Lahman sigue vivo pero se cayó de GitHub; ahora lo
+  distribuye SABR por Box.com, y un cron contra Box no es un `curl`.
+- **NFL, NHL, críquet** — datos buenos y licencias limpias, pero el público
+  no es el nuestro. Si los nombres no te suenan, no hay juego.
+
+**El patrón, que ya va tres veces.** El mundo de los datos deportivos
+abiertos está lleno de partidos, etapas y calendarios, y casi vacío de
+**totales de carrera por persona**, que es lo único que este juego come.
+Las tres excepciones son justo los tres catálogos que hay: la NBA porque la
+liga los publica, el fútbol porque alguien hizo el volcado, y la F1 porque
+F1DB lleva años agregándolo. No es mala suerte: sumar una carrera entera es
+trabajo, y casi nadie lo regala.
+
+**Y la consecuencia para el tablero:** un catálogo nuevo no es barato, así
+que meter el cuarto no es lo que le falta al juego. Lo que falta es saber
+si engancha, y eso lo contesta M0.
+
 ## Decisiones al llegar
 
 | Cuándo | Qué |
