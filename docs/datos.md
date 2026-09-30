@@ -129,7 +129,71 @@ eligen a ojo en vez de medirlas.
   afinar, y con 100 jugadores todos famosos el buscador deja de premiar saber.
 - **openfootball**: trae resultados de partidos, pero no goleadores.
 
+## Fórmula 1
+
+| | |
+|---|---|
+| Fuente | [F1DB](https://github.com/f1db/f1db), release `f1db-csv.zip` |
+| Archivo | `src/f1.generated.json` |
+| Se regenera con | `npm run sync:f1` |
+| Cron | GitHub Actions, lunes 07:00 UTC (publican release tras cada carrera) |
+| Cobertura | Desde 1950, todos los Grandes Premios |
+| Tamaño | 5 categorías, 357–792 pilotos según categoría |
+| Fotos | **No.** F1DB no trae retratos y no hay CDN abierto de pilotos |
+
+**Por qué estas cinco categorías y no las famosas.** Aquí pasa lo contrario
+que en la NBA. Allí lo que la gente se sabe —los puntos de LeBron— son
+decenas de miles, así que fallar por uno no cuesta nada. En la F1 los
+números conocidos son pequeños, y con objetivos pequeños fallar por uno se
+lleva media puntuación. Medido con `npm run sync:f1 -- --report`:
+
+| Categoría | Pool | Objetivo mediano | coste/1 | |
+|---|---|---|---|---|
+| Vueltas completadas | 778 | 31.300 | 0 pts | dentro |
+| Puntos en toda su carrera | 357 | 1.400 | 4 pts | dentro |
+| Grandes Premios disputados | 792 | 640 | 8 pts | dentro |
+| Carreras terminadas | 657 | 402 | 12 pts | dentro |
+| Abandonos | 718 | 239 | 21 pts | dentro |
+| Podios | 219 | 96 | 52 pts | **fuera** |
+| Pole positions | 109 | 43 | 116 pts | **fuera** |
+| Victorias | 116 | 39 | 128 pts | **fuera** |
+| Campeonatos | 35 | 11 | 455 pts | **fuera** |
+
+Con «victorias» dentro, equivocarte en **un** Gran Premio de los 39 que
+pide el objetivo te costaría 128 puntos de 1000. Eso no es un reto difícil,
+es una lotería. Y «campeonatos» es directamente absurdo: el objetivo
+mediano son 11 y cada uno vale 455 puntos.
+
+**Limitaciones.**
+
+- **Los puntos no son comparables entre épocas.** El sistema de puntuación
+  ha cambiado varias veces desde 1950 y desde 2010 se reparten muchos más,
+  así que un piloto moderno acumula mucho más rápido. Lo dice su `note`.
+- **Sin fotos.** El hueco enseña las iniciales con su tono estable. Si
+  aparece una fuente de retratos con licencia clara, solo hay que rellenar
+  `photoUrl` en `src/catalogs/f1/sport.ts` y añadir el `photoId` en el
+  sync — el resto de la UI ya funciona igual que con la NBA. Pistas **sin
+  comprobar**, para no empezar de cero cuando toque:
+  - **Wikimedia Commons / Wikidata** (propiedad `P18` de cada piloto).
+    Libre, pero cada imagen lleva su propia licencia y su atribución, y la
+    cobertura de los pilotos antiguos será irregular. Es la vía más seria.
+  - **openf1.org**, que expone retratos, pero solo de la parrilla actual y
+    con la licencia por aclarar.
+  - Lo que **no** vale: las fotos de Formula1.com y las agencias. Tienen
+    dueño, igual que el histórico del fútbol.
+  Mirarlo con el mismo criterio que el resto: primero la licencia, después
+  la cobertura, y solo entonces el código.
+- «Grandes Premios disputados» cuenta salidas, no inscripciones: quien se
+  inscribió y no salió no suma.
+- «Abandonos» y «carreras terminadas» se cuentan resultado a resultado
+  sobre `f1db-races-race-results.csv`, no vienen dados.
+
 ## Licencias
+
+**F1DB** está bajo **CC BY 4.0**: pide atribución y nada más. Sin la
+cláusula *NonCommercial* que arrastran los espejos del tenis ni el
+*ShareAlike* de Lahman, así que no hipoteca lo que se pueda hacer con el
+juego. Se cita en el `source` del archivo generado y aquí.
 
 Las dos fuentes de fútbol y sus datos están bajo **CC0 1.0** (dominio
 público). No exigen atribución, pero se cita el origen en el `source` del

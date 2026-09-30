@@ -1,0 +1,28 @@
+name: Sync F1
+
+# F1DB publica una release después de cada carrera, así que este catálogo
+# sí se puede mantener solo — al revés que el fútbol, cuya fuente está
+# parada. Los lunes, que es cuando ya ha corrido el fin de semana.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run sync:f1
+      - name: Commit si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/f1.generated.json
+          git diff --cached --quiet || git commit -m "sync: totales de carrera de F1"
+          git push
