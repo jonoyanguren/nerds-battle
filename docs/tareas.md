@@ -110,6 +110,37 @@ fuente ya no se actualiza, así que el fútbol no tiene cron. Por eso se
 dejó fuera «goles en LaLiga» pese a tener buena curva: Messi saldría con
 305 y no con 474, y esa sí la gente se la sabe. Todo en `docs/datos.md`.
 
+### M9 · Tercer catálogo: Fórmula 1
+
+Sale del cajón de «Aún no» por lo mismo que el fútbol: el motor ya estaba
+listo y lo caro eran los datos.
+
+- [x] `npm run sync:f1` con modo informe, que mide cada categoría antes de
+      elegirla
+- [x] `src/f1.generated.json` desde [F1DB](https://github.com/f1db/f1db)
+- [x] `src/catalogs/f1/` + logo + registro
+- [x] Ficha completa en `docs/datos.md`
+
+Lo que hay que saber, y es lo interesante: **en la F1 las cifras famosas
+son justo las injugables.** Al revés que en la NBA, donde lo que la gente
+se sabe son decenas de miles de puntos, aquí los números conocidos son
+pequeños. Fallar por una victoria cuesta 128 puntos de 1000, y por un
+campeonato 455. Así que victorias, poles, podios y campeonatos están fuera,
+y dentro quedan las de volumen: vueltas, puntos, GP disputados, carreras
+terminadas y abandonos. Las cifras están en `docs/datos.md`.
+
+Dos cosas a vigilar en el playtest:
+
+- **Puede resultar menos divertido de lo que parece.** Las categorías que
+  aguantan son las que nadie tiene interiorizadas. «Vueltas completadas» se
+  puede deducir (≈ GP × 60), pero no se sabe. Si el catálogo se siente
+  como adivinar al azar, es esto.
+- **No hay fotos de pilotos**, así que los cinco huecos salen con
+  iniciales. En un juego que va de reconocer caras, eso es una pérdida.
+
+A favor: F1DB publica release después de cada carrera, así que **este
+catálogo sí puede tener cron**, al revés que el fútbol.
+
 ## Al final — M0 · Colegas
 
 - [ ] Mandar el enlace a 3–5 colegas
@@ -119,8 +150,12 @@ dejó fuera «goles en LaLiga» pese a tener buena curva: Messi saldría con
 
 ## Aún no
 
-Más catálogos (Pokémon…), ranking global, reto diario, mostrar cifras
-antes de tiempo, ordenar el buscador por stat.
+- **Banco de imágenes para los pilotos de F1.** Es la pega más gorda del
+  catálogo nuevo: el juego va de reconocer caras y la F1 sale con
+  iniciales. Las pistas y el criterio están en `docs/datos.md`, en la ficha
+  de Fórmula 1. Primero la licencia, después la cobertura.
+- Más catálogos (Pokémon…), ranking global, reto diario, mostrar cifras
+  antes de tiempo, ordenar el buscador por stat.
 
 Añadir un deporte no pide refactor: `src/catalogs/<id>/`, logo en
 `public/sports/`, registrar en `registry.ts` y `catalogs/load.ts`.
