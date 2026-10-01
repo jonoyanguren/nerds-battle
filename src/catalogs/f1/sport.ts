@@ -15,6 +15,7 @@ export const F1_SPORT: Sport = {
   scope: "Toda la historia",
   logo: "/sports/f1.svg",
   photoUrl: "",
+  category: "motor",
 };
 
 /**
