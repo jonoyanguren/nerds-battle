@@ -65,8 +65,16 @@ puntos tienen suelo en 0: dos plantillas malas empatarían a cero aunque una
 esté mucho más cerca. El empate existe y se enseña.
 
 Se juega en **el mismo dispositivo**. Fichan **uno a uno** (J1, J2, J1…)
-sobre el **mismo pool**: un jugador no se puede repetir. Si uno rellenara
-los cinco huecos de golpe, se quedaría a todos los buenos.
+sobre el **mismo pool**: un jugador no se puede repetir.
+
+Se apuntó que el turno alterno evitaba que uno «se quedara a los buenos»,
+pero eso está medido y no ocurre: quitarle al rival los cinco jugadores que
+un jugador óptimo querría le cuesta **entre 0 y 29 puntos de 1000**. Con
+miles de nombres por categoría, y siendo un juego de acercarse a un objetivo
+en vez de maximizar, acaparar no da ventaja.
+
+El turno alterno se sostiene por otra razón, que es cómo se juega: los dos
+miran la misma pantalla y se van reaccionando.
 
 Las cifras se piden en **una sola llamada** cuando las dos plantillas están
 completas. Un duelo no guarda `Round` ni toca el HUD: los dos comparten

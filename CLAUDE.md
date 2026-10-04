@@ -25,6 +25,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
   (`photoId` = archivo con timestamp); si no hay retrato, iniciales.
 - `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
+- `scripts/curva.mjs` — `npm run curva`: cuenta las rondas guardadas y dice
+  si la curva es dura o blanda. El criterio está en `docs/tareas.md`, M0.
 - `src/lib/roster.ts` — valida 5 nombres y les saca las cifras. Lo usan
   `/api/reveal` y `/api/duel`; no duplicar esa validación en cada ruta.
 - `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
@@ -77,9 +79,17 @@ Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.verce
 API ciega + catálogos en JSON. Login Google opcional: se puede jugar sin cuenta.
 Con sesión, las rondas se guardan y se ven en Perfil. Modo 2 jugadores en el
 mismo dispositivo (M6): mismo reto, fichan uno a uno sin repetir jugador,
-gana quien menos error tenga; el duelo no se guarda. Siguiente: playtest
-(M0) y lo que queda de M7.
-Orden en `docs/tareas.md`.
+gana quien menos error tenga; el duelo no se guarda.
+
+Tres catálogos: NBA, fútbol y Fórmula 1. El selector los agrupa por familia
+(`category` en cada `Sport`).
+
+**Siguiente: M0.** Ya han jugado dos personas y la curva de puntuación
+(`error × 5`) sigue sin validar; `npm run curva` da el veredicto contra las
+rondas guardadas. Detrás viene el salto de pantalla única a sitio —landing,
+reto diario, rey de la pista y 1 contra 1 online—, y tres de esas cuatro
+dependen de que el reto lo emita y valide el servidor (M11), porque hoy el
+cliente manda el `target` al revelar. Orden y porqués en `docs/tareas.md`.
 
 ## Idioma
 
