@@ -116,6 +116,63 @@ body{
 .history-pick span{font-size:11px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .history-pick b{font-family:var(--display);font-size:16px;font-weight:400;color:var(--accent);font-variant-numeric:tabular-nums}
 
+/* --- landing ---
+   Misma paleta y misma tipografía que la partida: es la puerta del mismo
+   sitio, no otra marca. Lo único nuevo es que aquí sí hay aire, porque es
+   lo primero que ve alguien que no sabe de qué va esto. */
+.landing{display:flex;flex-direction:column;gap:26px;min-height:calc(100vh - 44px);padding-top:4px}
+.landing-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.landing-hero{max-width:640px}
+.landing-claim{
+  font-family:var(--display);font-size:clamp(30px,6.4vw,52px);line-height:.98;margin:0;
+}
+.landing-claim em{font-style:normal;color:var(--accent)}
+.landing-sub{color:var(--muted);font-size:14px;margin:14px 0 0;max-width:430px}
+.landing-how{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.landing-how li{
+  background:var(--panel);border:1px solid var(--line);padding:14px 16px;
+  font-size:13px;line-height:1.4;color:var(--ink);
+}
+.landing-step{
+  display:block;font-family:var(--display);font-size:22px;color:var(--accent);
+  line-height:1;margin-bottom:7px;
+}
+.landing-pick{display:flex;flex-direction:column;gap:14px}
+.landing-family h2{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 8px;font-weight:400;
+}
+.landing-family + .landing-family{margin-top:4px}
+.landing-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.landing-card{
+  display:flex;flex-direction:column;gap:3px;
+  background:var(--panel);border:1px solid var(--line);padding:14px 15px;
+  text-decoration:none;color:var(--ink);
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.landing-card:hover{border-color:var(--accent);background:var(--panel-2)}
+.landing-card:active{transform:translateY(1px)}
+.landing-card img{display:block;margin-bottom:5px}
+.landing-card b{font-family:var(--display);font-size:22px;font-weight:400;line-height:1.05}
+.landing-card span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);
+}
+.landing .credit{margin-top:auto}
+/* El logo lleva de vuelta a la portada sin parecer un enlace suelto. */
+.wordmark a{color:inherit;text-decoration:none}
+
+@media (max-width:720px){
+  .landing{gap:20px}
+  .landing-how{grid-template-columns:1fr;gap:6px}
+  .landing-how li{display:flex;align-items:baseline;gap:10px;padding:11px 13px}
+  .landing-step{margin-bottom:0;font-size:18px;flex-shrink:0}
+  .landing-cards{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+}
+
 /* --- jumbotron --- */
 .jumbo{
   background:linear-gradient(180deg, #1A2130 0%, #121722 100%);
