@@ -2,10 +2,16 @@
 
 Una cosa cada vez. Tachar al cerrar.
 
-M0 ya no puede esperar, aunque siga escrito al final: ya han jugado dos
-personas y **la curva de puntuación sigue sin validar**. Con tres catálogos
-dentro y un ranking global en la lista, cada cosa nueva hereda ese problema
-en vez de resolverlo. `npm run curva` da el veredicto.
+🔴 **Antes que nada: el login está roto** (`redirect_uri_mismatch`, ver M3).
+Y eso no es un problema aparte, es *el* problema: las rondas **solo se
+guardan si hay sesión**. Con el login caído, la gente puede jugar pero no
+deja rastro, así que `npm run curva` dirá «no hay ninguna ronda» — y no
+porque nadie juegue, sino porque nadie puede entrar. Han jugado dos
+personas y probablemente no haya ni una ronda en la base.
+
+Con el login arreglado, M0 es lo siguiente: **la curva de puntuación sigue
+sin validar**. Con tres catálogos dentro y un ranking global en la lista,
+cada cosa nueva hereda ese problema en vez de resolverlo.
 
 El motor (`makeChallenge`, `scoreRound`) no se reescribe. Next.js solo
 cambia de dónde salen los datos y **cuándo** se ven las cifras.
@@ -65,6 +71,19 @@ Auth.js. Entrar / salir + pestaña Perfil. Sin ruta `/perfil`.
 - [x] Con cuenta, cada revelado guarda una `Round`
 - [x] Pestaña Perfil: récord, media, mejor por stat, historial
 - [x] `GET /api/me` (401 si no hay sesión)
+- [ ] 🔴 **El login está roto en producción: `Error 400: redirect_uri_mismatch`.**
+      Google rechaza la vuelta porque la URI de retorno que recibe no está
+      en la lista de autorizadas de la credencial OAuth. `src/auth.ts` usa
+      `trustHost: true` y **no fija `AUTH_URL`**, así que la URI se
+      construye con el host de la petición: en el dominio de siempre sale
+      una, y en cada despliegue de vista previa de Vercel sale otra
+      distinta, que nunca va a coincidir.
+      Arreglo: en Google Cloud Console → Credenciales → el cliente OAuth →
+      *URIs de redireccionamiento autorizados*, añadir **exactamente**
+      `https://nerds-battle-jonoyangurens-projects.vercel.app/api/auth/callback/google`
+      y `http://localhost:3000/api/auth/callback/google`. Y fijar `AUTH_URL`
+      en Vercel al dominio bueno, para que las vistas previas no inventen
+      una URI cada vez.
 
 ### M4 · API ciega
 
