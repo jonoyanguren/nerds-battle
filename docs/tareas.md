@@ -23,11 +23,8 @@ Next.js (App Router) + Postgres + Prisma + Auth.js (Google).
 Dos crones semanales en GitHub Actions: NBA los lunes 06:00 UTC y F1 los
 lunes 07:00 UTC. El fútbol no tiene, porque su fuente está parada.
 
-⚠ **El cron de la NBA no ha funcionado nunca**: tres ejecuciones, tres
-fallos (14, 21 y 28 de septiembre). El JSON solo se actualiza cuando
-alguien lanza `npm run sync` a mano. La causa más probable es que
-`stats.nba.com` bloquea las IPs de los runners de GitHub. Sin confirmar:
-hay que lanzarlo desde Actions y leer el error.
+⚠ El de la NBA **no ha funcionado nunca**, así que ese JSON solo se
+actualiza a mano. Ver «Errores vistos», nº 2.
 
 ```
 buscador  →  {name, rank, photo}    nunca value
@@ -71,19 +68,8 @@ Auth.js. Entrar / salir + pestaña Perfil. Sin ruta `/perfil`.
 - [x] Con cuenta, cada revelado guarda una `Round`
 - [x] Pestaña Perfil: récord, media, mejor por stat, historial
 - [x] `GET /api/me` (401 si no hay sesión)
-- [ ] 🔴 **El login está roto en producción: `Error 400: redirect_uri_mismatch`.**
-      Google rechaza la vuelta porque la URI de retorno que recibe no está
-      en la lista de autorizadas de la credencial OAuth. `src/auth.ts` usa
-      `trustHost: true` y **no fija `AUTH_URL`**, así que la URI se
-      construye con el host de la petición: en el dominio de siempre sale
-      una, y en cada despliegue de vista previa de Vercel sale otra
-      distinta, que nunca va a coincidir.
-      Arreglo: en Google Cloud Console → Credenciales → el cliente OAuth →
-      *URIs de redireccionamiento autorizados*, añadir **exactamente**
-      `https://nerds-battle-jonoyangurens-projects.vercel.app/api/auth/callback/google`
-      y `http://localhost:3000/api/auth/callback/google`. Y fijar `AUTH_URL`
-      en Vercel al dominio bueno, para que las vistas previas no inventen
-      una URI cada vez.
+- [ ] 🔴 **El login está roto en producción** (`redirect_uri_mismatch`).
+      Qué pasa y cómo se arregla, en «Errores vistos», nº 1.
 
 ### M4 · API ciega
 
@@ -101,12 +87,9 @@ GitHub Actions: lunes 06:00 UTC.
 
 - [x] Fuente + JSON + fotos
 - [x] Si falla, se quedan los de la semana anterior (el JSON no se toca)
-- [ ] **Que el cron llegue a funcionar una vez.** Nunca lo ha hecho: tres
-      ejecuciones, tres fallos. Lo que está probado es el script a mano;
-      lo automático no. Lanzarlo desde Actions, leer el error y decidir —
-      si `stats.nba.com` bloquea los runners, o se busca otra vía o se
-      quita el cron y se dice que el sync es manual, pero no se deja
-      tachado como si funcionara.
+- [ ] 🔴 **Que el cron llegue a funcionar una vez.** Nunca lo ha hecho:
+      tres ejecuciones, tres fallos. Lo probado es el script a mano; lo
+      automático no. En «Errores vistos», nº 2.
 
 ### M6 · 2 jugadores
 
@@ -244,16 +227,7 @@ recurso de la página falla.
 
 Fallan dos, y **ninguno lo causa la landing** — los dos ya estaban:
 
-- [ ] **Con la ronda cerrada no se puede cambiar de deporte.** Las
-      pestañas quedan deshabilitadas hasta pulsar «Siguiente», porque
-      `locking` no se suelta al terminar y el `disabled` lo mira. Antes
-      molestaba poco; ahora que entras a un deporte desde la portada,
-      cambiar es un gesto normal y queda bloqueado. Es una línea en
-      `App.tsx`, pero es UI y la UI está congelada: hace falta el visto
-      bueno de Jon.
-- [ ] **No hay favicon.** `/favicon.ico` da 404. Es cosmético, pero un
-      juego que quieres que la gente comparta y guarde en marcadores sale
-      con el icono en blanco.
+Los dos están en «Errores vistos», nº 4 y nº 6, con su arreglo.
 
 ### M11 · El reto lo emite y lo valida el servidor
 
@@ -395,6 +369,156 @@ trabajo, y casi nadie lo regala.
 **Y la consecuencia para el tablero:** un catálogo nuevo no es barato, así
 que meter el cuarto no es lo que le falta al juego. Lo que falta es saber
 si engancha, y eso lo contesta M0.
+
+## Errores vistos
+
+Todo lo que está roto o mal, con su arreglo. Comprobado el 4-10-2026 contra
+master: los que están aquí **siguen vivos**, no son historia.
+
+Orden por lo que duele, no por lo que cuesta.
+
+---
+
+### 🔴 1 · El login no funciona en producción
+
+**Qué pasa.** Al entrar con Google: `Error 400: redirect_uri_mismatch`.
+
+**Por qué.** `src/auth.ts` usa `trustHost: true` y **no fija `AUTH_URL`**, así
+que Auth.js construye la URI de retorno con el host de la petición. En el
+dominio de siempre sale una, y en cada despliegue de vista previa de Vercel
+sale otra distinta. Google solo acepta las que tiene en su lista.
+
+**Por qué importa más de lo que parece.** Las rondas **solo se guardan si hay
+sesión**. Con el login caído, quien juega no deja rastro: `npm run curva`
+dirá «no hay ninguna ronda» y parecerá que no juega nadie, cuando lo que
+pasa es que nadie puede entrar. **Esto bloquea M0, y M0 bloquea M12.**
+
+**Arreglo.** En Google Cloud Console → Credenciales → el cliente OAuth →
+*URIs de redireccionamiento autorizados*, añadir exactamente:
+
+```
+https://nerds-battle-jonoyangurens-projects.vercel.app/api/auth/callback/google
+http://localhost:3000/api/auth/callback/google
+```
+
+Y en Vercel, variable `AUTH_URL` con el dominio bueno, para que las vistas
+previas dejen de inventarse una URI cada vez.
+
+La pantalla de error de Google enseña la URI exacta que recibió: cópiala y
+pégala tal cual, así no se falla por una barra de más.
+
+---
+
+### 🔴 2 · El cron de la NBA no ha funcionado nunca
+
+**Qué pasa.** Tres ejecuciones registradas (14, 21 y 28 de septiembre), tres
+fallos. Cero éxitos. Falla en el paso `npm run sync`.
+
+**Por qué importa.** Las cifras de la NBA solo se actualizan cuando alguien
+lanza el sync a mano. M5 estaba tachado entero como si lo automático
+funcionara.
+
+**Qué se descarta ya.** No son las cabeceras: el script ya manda `Referer`,
+`x-nba-stats-origin`, `x-nba-stats-token` y un `User-Agent` de navegador, que
+es lo que pide NBA Stats. Y no es falta de `npm install`: el script solo usa
+módulos nativos de Node.
+
+**Lo que queda.** Casi seguro que `stats.nba.com` bloquea las IPs de centro
+de datos, y los runners de GitHub lo son.
+
+**Arreglo.** Primero confirmarlo, que es gratis:
+
+```
+gh workflow run sync-nba.yml
+gh run list --workflow=sync-nba.yml --limit 1
+gh run view --log-failed
+```
+
+Si es el bloqueo por IP, **cambiar de sitio el cron no lo arregla** —Vercel y
+los servicios de cron también salen de centros de datos—. Las salidas reales
+son tres: ejecutarlo desde una IP doméstica (un equipo de casa, una
+Raspberry), buscar otra fuente de datos, o aceptar que el sync es manual y
+quitar el cron en vez de dejarlo fallando en silencio.
+
+---
+
+### 🟠 3 · La puntuación se puede falsificar
+
+**Qué pasa.** `POST /api/reveal` puntúa con `scoreRound(total, target)` y el
+`target` sale del cuerpo de la petición, o sea, **lo pone el cliente**.
+Comprobado en vivo: con las mismas cinco fichas, cambiando solo ese campo se
+pasa de 0 puntos a 1000 y «Nerd supremo».
+
+**Por qué importa.** Hoy casi nada, porque solo te engañas a ti mismo. En
+cuanto haya ranking global (M12) o 1 contra 1 online (M14), cualquiera
+publica 1000.
+
+**Arreglo.** Es M11 entero: que el reto lo emita y lo valide el servidor.
+
+---
+
+### 🟠 4 · Con la ronda cerrada no se puede cambiar de deporte
+
+**Qué pasa.** Al terminar una ronda, las pestañas de deporte quedan
+deshabilitadas hasta pulsar «Siguiente».
+
+**Por qué.** `locking` se pone a `true` al revelar y solo se suelta en
+`resetRound()`. El `disabled` del selector lo mira:
+
+```tsx
+disabled={SPORTS.length === 1 || locking || phase === "revealing"}
+```
+
+**Por qué importa ahora.** Antes molestaba poco. Con la portada mandándote a
+un deporte concreto, cambiar es un gesto normal y está bloqueado.
+
+**Arreglo.** Una línea: que la condición deje de mirar `locking` cuando la
+fase es `done`. Toca `App.tsx`, que es UI congelada, así que **pide el visto
+bueno de Jon**.
+
+---
+
+### 🟠 5 · Un cero sale en verde
+
+**Qué pasa.** En el marcador final, los puntos están pintados con
+`style={{ color: "var(--good)" }}` **fijo**. Sacar 0 se enseña en verde,
+justo debajo de «Fuera de rango».
+
+**Arreglo.** Que el color salga del error, igual que ya hace la celda de al
+lado. Una línea en `App.tsx`; también es UI congelada.
+
+---
+
+### 🟡 6 · No hay favicon
+
+**Qué pasa.** `/favicon.ico` da 404. No hay icono en `public/` ni en
+`src/app/`.
+
+**Por qué importa.** Poco para jugar, bastante para compartir: el enlace sale
+con el icono en blanco y la pestaña del navegador, sin marca.
+
+**Arreglo.** Un `icon.png` o `icon.svg` en `src/app/`; Next lo recoge solo.
+
+---
+
+### 🟡 7 · Perfil no tiene ruta propia
+
+**Qué pasa.** Perfil es una pestaña dentro de la partida, así que desde la
+portada hay que entrar a un deporte para ver tu historial.
+
+**Por qué importa ahora.** Era coherente cuando todo era una pantalla. Con el
+juego repartido en rutas, chirría.
+
+**Arreglo.** Una ruta `/perfil`. Decisión de M3 que conviene revisar.
+
+---
+
+### ✅ Arreglados
+
+- **`npm run curva` no existía.** El `package.json` declaraba el script y
+  `scripts/curva.mjs` no estaba en master: el comando reventaba con *module
+  not found*. Arreglado, y además ahora avisa con una frase clara cuando no
+  alcanza la base en vez de escupir un volcado de Node.
 
 ## Decisiones al llegar
 
