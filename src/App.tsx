@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, type KeyboardEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SPORTS, DEFAULT_SPORT_ID, sportGroups } from "./catalogs/registry";
 import { SLOTS, fold, fmt, fmtDate } from "./format";
 import { loadStats, saveStats } from "./storage";
@@ -235,8 +237,16 @@ async function fetchProfile(): Promise<ProfilePayload | null> {
   return res.json() as Promise<ProfilePayload>;
 }
 
-export default function App({ user }: { user: AuthUser | null }) {
-  const [sportId, setSportId] = useState(DEFAULT_SPORT_ID);
+export default function App({
+  user,
+  initialSportId = DEFAULT_SPORT_ID,
+}: {
+  user: AuthUser | null;
+  /** Lo pone la ruta (`/nba`, `/futbol`, `/f1`). Por defecto, el primero. */
+  initialSportId?: string;
+}) {
+  const router = useRouter();
+  const [sportId, setSportId] = useState(initialSportId);
   const [tab, setTab] = useState<Tab>("play");
   const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
   const [picks, setPicks] = useState<(RosterPick | null)[]>(emptyRoster);
@@ -268,7 +278,7 @@ export default function App({ user }: { user: AuthUser | null }) {
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchChallenge(DEFAULT_SPORT_ID, null);
+        const data = await fetchChallenge(initialSportId, null);
         if (!cancelled) setChallenge(data);
       } catch {
         if (!cancelled) setLoadError(true);
@@ -462,6 +472,9 @@ export default function App({ user }: { user: AuthUser | null }) {
     resetRound();
     setSportId(id);
     setChallenge(null);
+    // La URL tiene que decir la verdad: con `replace` no se llena el
+    // historial de cambios de deporte, pero al recargar sigues aquí.
+    router.replace(`/${id}`, { scroll: false });
     try {
       const data = await fetchChallenge(id, null);
       setChallenge(data);
@@ -523,7 +536,7 @@ export default function App({ user }: { user: AuthUser | null }) {
 
       <header className="hud">
         <div>
-          <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
+          <h1 className="wordmark"><Link href="/">NERDS <em>BATTLE</em></Link></h1>
           <nav className="tabs" aria-label="Sección">
             <button type="button" className={"tab" + (tab === "play" ? " on" : "")} onClick={() => setTab("play")}>
               Juego

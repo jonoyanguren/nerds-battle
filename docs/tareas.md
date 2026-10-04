@@ -200,13 +200,16 @@ dos nacen rotas.
 Independiente de todo lo demás: no necesita servidor ni tocar el motor. Es
 lo más barato y lo que más cambia la sensación de «esto es un sitio».
 
-- [ ] Página de entrada que diga en una frase de qué va esto
-- [ ] Botones para entrar a jugar, **uno por deporte**
-- [ ] Rutas de verdad (`/nba`, `/futbol`, `/f1`), no pestañas en la misma
-      página
-- [ ] Decidir qué pasa con el selector agrupado de M9: si el deporte se
-      elige en la landing, dentro de la partida probablemente sobre, o se
-      quede solo para cambiar sin volver atrás
+- [x] Página de entrada que diga en una frase de qué va esto
+- [x] Botones para entrar a jugar, **uno por deporte**, agrupados por familia
+- [x] Rutas de verdad (`/nba`, `/futbol`, `/f1`), no pestañas en la misma
+      página. Un id que no existe da 404
+- [x] El selector de M9 **se queda** dentro de la partida, para cambiar de
+      deporte sin volver atrás, y ahora mueve la URL: si recargas, sigues
+      donde estabas
+- [ ] **Perfil sigue sin ruta propia.** Es una pestaña dentro de la
+      partida, así que desde la portada hay que entrar a un deporte para
+      verlo. Con el juego ya repartido en pantallas, eso chirría
 
 ### M11 · El reto lo emite y lo valida el servidor
 
