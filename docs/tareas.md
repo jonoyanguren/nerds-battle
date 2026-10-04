@@ -2,8 +2,10 @@
 
 Una cosa cada vez. Tachar al cerrar.
 
-El enlace a colegas **puede esperar** (semanas). Next.js + Google ya
-están; M0 es mandar la URL y anotar la curva.
+M0 ya no puede esperar, aunque siga escrito al final: ya han jugado dos
+personas y **la curva de puntuación sigue sin validar**. Con tres catálogos
+dentro y un ranking global en la lista, cada cosa nueva hereda ese problema
+en vez de resolverlo. `npm run curva` da el veredicto.
 
 El motor (`makeChallenge`, `scoreRound`) no se reescribe. Next.js solo
 cambia de dónde salen los datos y **cuándo** se ven las cifras.
@@ -11,7 +13,15 @@ cambia de dónde salen los datos y **cuándo** se ven las cifras.
 ## Cómo es el backend
 
 Next.js (App Router) + Postgres + Prisma + Auth.js (Google).
-Cron semanal: GitHub Actions (lunes 06:00 UTC) o `npm run sync`.
+
+Dos crones semanales en GitHub Actions: NBA los lunes 06:00 UTC y F1 los
+lunes 07:00 UTC. El fútbol no tiene, porque su fuente está parada.
+
+⚠ **El cron de la NBA no ha funcionado nunca**: tres ejecuciones, tres
+fallos (14, 21 y 28 de septiembre). El JSON solo se actualiza cuando
+alguien lanza `npm run sync` a mano. La causa más probable es que
+`stats.nba.com` bloquea las IPs de los runners de GitHub. Sin confirmar:
+hay que lanzarlo desde Actions y leer el error.
 
 ```
 buscador  →  {name, rank, photo}    nunca value
@@ -72,6 +82,12 @@ GitHub Actions: lunes 06:00 UTC.
 
 - [x] Fuente + JSON + fotos
 - [x] Si falla, se quedan los de la semana anterior (el JSON no se toca)
+- [ ] **Que el cron llegue a funcionar una vez.** Nunca lo ha hecho: tres
+      ejecuciones, tres fallos. Lo que está probado es el script a mano;
+      lo automático no. Lanzarlo desde Actions, leer el error y decidir —
+      si `stats.nba.com` bloquea los runners, o se busca otra vía o se
+      quita el cron y se dice que el sync es manual, pero no se deja
+      tachado como si funcionara.
 
 ### M6 · 2 jugadores
 
@@ -85,13 +101,21 @@ emitidos y validados por el servidor (`game-design.md`), y eso es otra tarea.
 - [x] `duelWinner` en el motor: gana quien menos error tenga
 - [x] Un duelo no guarda `Round` ni toca el HUD: el perfil es de una persona
 
-Si uno fichara los cinco de golpe se quedaría a los buenos. Por eso el
-turno cambia tras cada ficha. Las cifras salen en una sola llamada.
+El turno cambia tras cada ficha y las cifras salen en una sola llamada.
+
+Ojo con el porqué, que la razón que se apuntó aquí **no se sostiene**: se
+creía que uno podía «quedarse a los buenos» fichando los cinco de golpe,
+pero medido contra los datos reales eso le cuesta al rival **entre 0 y 29
+puntos de 1000**. Con miles de jugadores por categoría, y siendo un juego
+de acercarse a un objetivo y no de maximizar, acaparar no sirve de nada.
+
+El turno alterno se queda por cómo se juega —los dos miran la misma
+pantalla y van reaccionando—, no por equilibrio.
 
 ### M7 · URL
 
 - [x] Deploy Vercel
-- [ ] Comprobar en el móvil: una ronda
+- [x] Comprobar en el móvil: una ronda (1 y 2 jugadores, en fútbol)
 
 ### M8 · Segundo catálogo: fútbol
 
@@ -141,12 +165,132 @@ Dos cosas a vigilar en el playtest:
 A favor: F1DB publica release después de cada carrera, así que **este
 catálogo sí puede tener cron**, al revés que el fútbol.
 
+## Lo siguiente: de pantalla única a sitio
+
+Hasta ahora esto es **una sola pantalla**. El selector agrupado de M9 ordena
+los catálogos, pero sigue siendo una fila de botones dentro de la misma
+página: no son pantallas distintas, y eso es lo que se pidió.
+
+Lo que viene cambia eso y añade formas de jugar. **Antes de leer el orden,
+lo importante:**
+
+### ⚠ Las tres cosas nuevas comparten un mismo cimiento, y no está puesto
+
+Hoy `POST /api/challenge` genera el objetivo y **se lo da al cliente**, y
+`POST /api/reveal` puntúa contra el `target` **que el cliente le manda de
+vuelta** (`scoreRound(total, target)`, con `target` sacado del body).
+
+Está comprobado en vivo: con las mismas cinco fichas, cambiando solo el
+campo `target` de la petición se pasa de 0 puntos a 1000 y «Nerd supremo».
+
+Mientras siga así:
+
+- un **ranking global** no vale nada, porque cualquiera publica 1000;
+- un **1 contra 1 online** no se puede arbitrar, porque cada lado decide su
+  propia nota.
+
+El modo de 2 jugadores de M6 se salva porque es local: los dos comparten
+pantalla y hacen de testigos. En cuanto el reto viaja por la red, no.
+
+Así que **M11 va antes que M12 y M14**, no por gusto sino porque sin él las
+dos nacen rotas.
+
+### M10 · Landing y navegación
+
+Independiente de todo lo demás: no necesita servidor ni tocar el motor. Es
+lo más barato y lo que más cambia la sensación de «esto es un sitio».
+
+- [ ] Página de entrada que diga en una frase de qué va esto
+- [ ] Botones para entrar a jugar, **uno por deporte**
+- [ ] Rutas de verdad (`/nba`, `/futbol`, `/f1`), no pestañas en la misma
+      página
+- [ ] Decidir qué pasa con el selector agrupado de M9: si el deporte se
+      elige en la landing, dentro de la partida probablemente sobre, o se
+      quede solo para cambiar sin volver atrás
+
+### M11 · El reto lo emite y lo valida el servidor
+
+El cimiento. Sin esto no hay ranking ni online.
+
+- [ ] `/api/reveal` deja de aceptar `target` del cliente
+- [ ] El reto diario se deriva de **la fecha**, con `makeChallenge`
+      sembrado: el servidor puede recalcular el mismo reto sin guardarlo
+      y comprobar contra su propio objetivo
+- [ ] Para los retos libres, el servidor firma el reto al emitirlo y
+      comprueba la firma al revelar
+- [ ] La semilla va en `engine.ts`, que es donde viven las reglas
+
+Ojo: `makeChallenge` usa `Math.random()`. Para el diario hace falta un
+generador con semilla, si no cada jugador vería un reto distinto.
+
+### M12 · Daily con puntuación global
+
+Un reto al día, el mismo para todo el mundo. **Depende de M11.**
+
+- [ ] Un reto por día y deporte, igual para todos
+- [ ] Una sola tirada: si ya jugaste hoy, se ve tu resultado
+- [ ] Tabla con las puntuaciones del día
+- [ ] Decidir si el ranking es global o solo entre conocidos
+
+**Y depende también de M0.** Un ranking global con la curva mal calibrada
+es una tabla de ceros: si se confirma que `×5` es duro, lo primero que ve
+un recién llegado es a todo el mundo a cero.
+
+### M13 · Rey de la pista
+
+Modo de racha: aguantas mientras no falles. En 1 jugador y en 2 jugadores
+sobre el mismo móvil **no necesita nada nuevo** — es M6 con otra regla de
+fin de partida, así que puede ir en paralelo a M11.
+
+- [ ] Definir la regla: ¿cuándo se pierde la corona? ¿Por bajar de X
+      puntos, por perder un duelo, por fallar dos seguidas?
+- [ ] Racha en 1 jugador
+- [ ] Racha en 2 jugadores, mismo dispositivo
+- [ ] La regla va en `engine.ts`, no en un componente
+
+Esto está sin definir a propósito: la regla de cuándo se pierde la corona
+es una decisión de diseño, no de programación, y la tenéis que tomar
+vosotros antes de que yo escriba nada.
+
+### M14 · 1 contra 1 online
+
+Dos personas, dos dispositivos, el mismo reto. **Depende de M11.**
+
+- [ ] Emparejar a dos jugadores con el mismo reto
+- [ ] Ninguno ve las cifras del otro hasta que han jugado los dos
+- [ ] El ganador lo decide el servidor con `duelWinner`
+- [ ] Qué pasa si uno abandona a medias
+
 ## Al final — M0 · Colegas
 
-- [ ] Mandar el enlace a 3–5 colegas
-- [ ] Anotar si la curva (`error × 5`) es dura o blanda
+- [x] Mandar el enlace a 3–5 colegas — han entrado 2
+- [ ] **Decirles que entren con Google**: sin sesión la ronda no se guarda
+      y el playtest no deja rastro que analizar
+- [ ] Con ~50 rondas, `npm run curva` y decidir si es dura o blanda
 - [ ] Ajustar `scoreRound` si hace falta
 - [ ] Decidir si el `#N DEL RANKING` se queda
+
+### El criterio, fijado antes de ver los datos
+
+`puntos = 1000 × (1 − error × 5)`. Ese `×5` nunca se ha validado: con él, un
+desvío del 20% ya da cero.
+
+| Si en las rondas reales… | Veredicto | Qué hacer |
+|---|---|---|
+| Más del 40% son cero | **Dura** | Bajar a `×3`: el cero se va al 33% de error |
+| Más del 40% pasan de 800 | **Blanda** | Subir a `×7` |
+| Hay reparto, 10–20% de ceros | Está bien | No tocar |
+
+Se escribe aquí antes de mirar los datos a propósito. Mirándolos primero es
+muy fácil encontrarle una razón a lo que ya tenías.
+
+`npm run curva` lee las rondas guardadas, imprime el reparto, el desglose
+por deporte y una tabla de qué habría pasado con otros multiplicadores.
+Avisa solo si hay menos de 50 rondas.
+
+Aviso de la simulación: quien ficha cinco nombres famosos sin método se
+desvía un 23–40%, o sea **cero en 6 ó 7 de cada 10 rondas**. Si eso se
+confirma, la curva es dura.
 
 ## Aún no
 
@@ -214,6 +358,5 @@ si engancha, y eso lo contesta M0.
 | M2 | Catálogos = JSON. Postgres = users / partidas / ranking (M3 en adelante). |
 | M3 | Tabla `users` la crea Auth.js. |
 | perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
-| M6 | ¿Mismo dispositivo o dos móviles? |
 | M8 | Fútbol: clubes desde 2012 y sin cron (la fuente está parada). Se etiqueta en vez de ocultarse. |
 | M6 | Mismo dispositivo: se pasa el móvil. Dos sesiones pediría retos emitidos por el servidor. |
