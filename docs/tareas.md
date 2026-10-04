@@ -219,16 +219,41 @@ dos nacen rotas.
 Independiente de todo lo demás: no necesita servidor ni tocar el motor. Es
 lo más barato y lo que más cambia la sensación de «esto es un sitio».
 
-- [x] Página de entrada que diga en una frase de qué va esto
-- [x] Botones para entrar a jugar, **uno por deporte**, agrupados por familia
-- [x] Rutas de verdad (`/nba`, `/futbol`, `/f1`), no pestañas en la misma
-      página. Un id que no existe da 404
-- [x] El selector de M9 **se queda** dentro de la partida, para cambiar de
-      deporte sin volver atrás, y ahora mueve la URL: si recargas, sigues
-      donde estabas
+Escrito y auditado, **pendiente de que lo valide alguien que no sea quien
+lo escribió**. Nada se tacha hasta entonces.
+
+- [ ] Página de entrada que diga en una frase de qué va esto
+- [ ] Botones para entrar a jugar, **uno por deporte**, agrupados por familia
+- [ ] Rutas de verdad (`/nba`, `/futbol`, `/f1`); un id que no existe da 404
+- [ ] El selector de M9 **se queda** dentro de la partida, para cambiar de
+      deporte sin volver atrás, y mueve la URL con `replace`: si recargas,
+      sigues donde estabas
 - [ ] **Perfil sigue sin ruta propia.** Es una pestaña dentro de la
       partida, así que desde la portada hay que entrar a un deporte para
       verlo. Con el juego ya repartido en pantallas, eso chirría
+
+### Lo que se comprobó, y lo que salió
+
+Auditoría automatizada sobre el servidor, no «compila»: 10 de 12 pasan.
+
+Pasan: el botón de la portada lleva a `/f1`; se fichan cinco y la ronda
+revela y puntúa; cambiar de deporte mueve la URL; recargar mantiene el
+deporte; Perfil abre; el modo 2 jugadores entra con sus dos tableros; el
+logo vuelve a la portada; una ruta inventada da 404 de verdad; ningún
+recurso de la página falla.
+
+Fallan dos, y **ninguno lo causa la landing** — los dos ya estaban:
+
+- [ ] **Con la ronda cerrada no se puede cambiar de deporte.** Las
+      pestañas quedan deshabilitadas hasta pulsar «Siguiente», porque
+      `locking` no se suelta al terminar y el `disabled` lo mira. Antes
+      molestaba poco; ahora que entras a un deporte desde la portada,
+      cambiar es un gesto normal y queda bloqueado. Es una línea en
+      `App.tsx`, pero es UI y la UI está congelada: hace falta el visto
+      bueno de Jon.
+- [ ] **No hay favicon.** `/favicon.ico` da 404. Es cosmético, pero un
+      juego que quieres que la gente comparta y guarde en marcadores sale
+      con el icono en blanco.
 
 ### M11 · El reto lo emite y lo valida el servidor
 
