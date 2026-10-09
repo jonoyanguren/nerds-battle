@@ -2,16 +2,13 @@
 
 Una cosa cada vez. Tachar al cerrar.
 
-🔴 **Antes que nada: el login está roto** (`redirect_uri_mismatch`, ver M3).
-Y eso no es un problema aparte, es *el* problema: las rondas **solo se
-guardan si hay sesión**. Con el login caído, la gente puede jugar pero no
-deja rastro, así que `npm run curva` dirá «no hay ninguna ronda» — y no
-porque nadie juegue, sino porque nadie puede entrar. Han jugado dos
-personas y probablemente no haya ni una ronda en la base.
+El login de Google **ya entra en producción**. Lo que falta es que quien
+juegue entre con cuenta: las rondas **solo se guardan si hay sesión**. Han
+jugado dos personas; si lo hicieron sin Google, no hay rastro que analizar.
 
-Con el login arreglado, M0 es lo siguiente: **la curva de puntuación sigue
-sin validar**. Con tres catálogos dentro y un ranking global en la lista,
-cada cosa nueva hereda ese problema en vez de resolverlo.
+**Lo siguiente es M0:** la curva de puntuación sigue sin validar. Con tres
+catálogos dentro y un ranking global en la lista, cada cosa nueva hereda
+ese problema en vez de resolverlo.
 
 El motor (`makeChallenge`, `scoreRound`) no se reescribe. Next.js solo
 cambia de dónde salen los datos y **cuándo** se ven las cifras.
@@ -68,8 +65,8 @@ Auth.js. Entrar / salir + pestaña Perfil. Sin ruta `/perfil`.
 - [x] Con cuenta, cada revelado guarda una `Round`
 - [x] Pestaña Perfil: récord, media, mejor por stat, historial
 - [x] `GET /api/me` (401 si no hay sesión)
-- [ ] 🔴 **El login está roto en producción** (`redirect_uri_mismatch`).
-      Qué pasa y cómo se arregla, en «Errores vistos», nº 1.
+- [x] Login en producción: el callback de Google iba sin path y no estaba
+      guardado. Ver «Errores vistos», arreglados.
 
 ### M4 · API ciega
 
@@ -225,9 +222,8 @@ deporte; Perfil abre; el modo 2 jugadores entra con sus dos tableros; el
 logo vuelve a la portada; una ruta inventada da 404 de verdad; ningún
 recurso de la página falla.
 
-Fallan dos, y **ninguno lo causa la landing** — los dos ya estaban:
-
-Los dos están en «Errores vistos», nº 4 y nº 6, con su arreglo.
+Fallaban dos que no causaba la landing (deporte bloqueado al cerrar y
+favicon). Los dos están en «Arreglados».
 
 ### M11 · El reto lo emite y lo valida el servidor
 
@@ -372,40 +368,10 @@ si engancha, y eso lo contesta M0.
 
 ## Errores vistos
 
-Todo lo que está roto o mal, con su arreglo. Comprobado el 4-10-2026 contra
-master: los que están aquí **siguen vivos**, no son historia.
+Todo lo que está roto o mal, con su arreglo. Lo de abajo **sigue vivo**.
+El login (antes nº 1) está en «Arreglados».
 
 Orden por lo que duele, no por lo que cuesta.
-
----
-
-### 🔴 1 · El login no funciona en producción
-
-**Qué pasa.** Al entrar con Google: `Error 400: redirect_uri_mismatch`.
-
-**Por qué.** `src/auth.ts` usa `trustHost: true` y **no fija `AUTH_URL`**, así
-que Auth.js construye la URI de retorno con el host de la petición. En el
-dominio de siempre sale una, y en cada despliegue de vista previa de Vercel
-sale otra distinta. Google solo acepta las que tiene en su lista.
-
-**Por qué importa más de lo que parece.** Las rondas **solo se guardan si hay
-sesión**. Con el login caído, quien juega no deja rastro: `npm run curva`
-dirá «no hay ninguna ronda» y parecerá que no juega nadie, cuando lo que
-pasa es que nadie puede entrar. **Esto bloquea M0, y M0 bloquea M12.**
-
-**Arreglo.** En Google Cloud Console → Credenciales → el cliente OAuth →
-*URIs de redireccionamiento autorizados*, añadir exactamente:
-
-```
-https://nerds-battle-jonoyangurens-projects.vercel.app/api/auth/callback/google
-http://localhost:3000/api/auth/callback/google
-```
-
-Y en Vercel, variable `AUTH_URL` con el dominio bueno, para que las vistas
-previas dejen de inventarse una URI cada vez.
-
-La pantalla de error de Google enseña la URI exacta que recibió: cópiala y
-pégala tal cual, así no se falla por una barra de más.
 
 ---
 
@@ -457,50 +423,6 @@ publica 1000.
 
 ---
 
-### 🟠 4 · Con la ronda cerrada no se puede cambiar de deporte
-
-**Qué pasa.** Al terminar una ronda, las pestañas de deporte quedan
-deshabilitadas hasta pulsar «Siguiente».
-
-**Por qué.** `locking` se pone a `true` al revelar y solo se suelta en
-`resetRound()`. El `disabled` del selector lo mira:
-
-```tsx
-disabled={SPORTS.length === 1 || locking || phase === "revealing"}
-```
-
-**Por qué importa ahora.** Antes molestaba poco. Con la portada mandándote a
-un deporte concreto, cambiar es un gesto normal y está bloqueado.
-
-**Arreglo.** Una línea: que la condición deje de mirar `locking` cuando la
-fase es `done`. Toca `App.tsx`, que es UI congelada, así que **pide el visto
-bueno de Jon**.
-
----
-
-### 🟠 5 · Un cero sale en verde
-
-**Qué pasa.** En el marcador final, los puntos están pintados con
-`style={{ color: "var(--good)" }}` **fijo**. Sacar 0 se enseña en verde,
-justo debajo de «Fuera de rango».
-
-**Arreglo.** Que el color salga del error, igual que ya hace la celda de al
-lado. Una línea en `App.tsx`; también es UI congelada.
-
----
-
-### 🟡 6 · No hay favicon
-
-**Qué pasa.** `/favicon.ico` da 404. No hay icono en `public/` ni en
-`src/app/`.
-
-**Por qué importa.** Poco para jugar, bastante para compartir: el enlace sale
-con el icono en blanco y la pestaña del navegador, sin marca.
-
-**Arreglo.** Un `icon.png` o `icon.svg` en `src/app/`; Next lo recoge solo.
-
----
-
 ### 🟡 7 · Perfil no tiene ruta propia
 
 **Qué pasa.** Perfil es una pestaña dentro de la partida, así que desde la
@@ -515,6 +437,17 @@ juego repartido en rutas, chirría.
 
 ### ✅ Arreglados
 
+- **Con la ronda cerrada no se podía cambiar de deporte.** `locking` dejaba
+  las pestañas deshabilitadas hasta «Siguiente». En `done` ya no se mira.
+- **Un cero salía en verde.** El score usaba `var(--good)` fijo; ahora el
+  color sale del error, igual que en el historial.
+- **No había favicon.** `src/app/icon.svg` (N naranja). Next lo recoge solo.
+- **Login en producción (`redirect_uri_mismatch`).** En el cliente OAuth, la
+  URI de producción estaba como origen (`…vercel.app`) y no como callback
+  (`…/api/auth/callback/google`). Además no se había guardado. La app ya
+  mandaba la URI buena; Google no la tenía. Arreglado el 9-10-2026. Las
+  vistas previas de Vercel pueden volver a fallar si no está `AUTH_URL`:
+  no bloquea producción.
 - **`npm run curva` no existía.** El `package.json` declaraba el script y
   `scripts/curva.mjs` no estaba en master: el comando reventaba con *module
   not found*. Arreglado, y además ahora avisa con una frase clara cuando no
@@ -527,7 +460,7 @@ juego repartido en rutas, chirría.
 | M4 | El cliente manda `target` al revelar; no hay tabla `challenges` (serverless). |
 | catálogos | La NBA es un `Sport` (nombre, logo, fotos). El motor recibe un `Catalog`. |
 | M2 | Catálogos = JSON. Postgres = users / partidas / ranking (M3 en adelante). |
-| M3 | Tabla `users` la crea Auth.js. |
+| M3 | Tabla `users` la crea Auth.js. El callback de Google tiene que llevar `/api/auth/callback/google`, no el origen suelto. |
 | perfil | Tabla `Round`. HUD y Perfil leen la BD si hay sesión; si no, localStorage. |
 | M8 | Fútbol: clubes desde 2012 y sin cron (la fuente está parada). Se etiqueta en vez de ocultarse. |
 | M6 | Mismo dispositivo: se pasa el móvil. Dos sesiones pediría retos emitidos por el servidor. |

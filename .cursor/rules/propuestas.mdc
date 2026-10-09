@@ -1,0 +1,12 @@
+---
+description: Al proponer siguiente trabajo, solo software y producto. El playtest lo gestiona Jon.
+alwaysApply: true
+---
+
+# Qué proponer
+
+Cuando pida qué haría, qué sigue, o una propuesta: **solo cambios de software o de producto** (UI, motor, API, datos, bugs, features).
+
+No recomendar playtest operativo: mandar el enlace, jugar N rondas, `npm run curva` como tarea para él, ni “decirles que entren con Google”. Eso lo gestiona aparte.
+
+El tablero (M0, curva) puede existir en `docs/tareas.md`; no lo ofrezcas como el siguiente paso mío.

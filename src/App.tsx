@@ -223,6 +223,12 @@ function stingOf(err: number): Sting {
   return "miss";
 }
 
+function scoreColor(err: number) {
+  if (err <= 0.03) return "var(--good)";
+  if (err <= 0.15) return "var(--accent)";
+  return "var(--bad)";
+}
+
 const STING_LABEL: Record<Sting, string> = {
   hit: "Clavada",
   close: "Cerca",
@@ -468,7 +474,7 @@ export default function App({
   };
 
   const selectSport = async (id: string) => {
-    if (id === sportId || locking || phase === "revealing") return;
+    if (id === sportId || phase === "revealing" || (locking && phase !== "done")) return;
     resetRound();
     setSportId(id);
     setChallenge(null);
@@ -560,7 +566,7 @@ export default function App({
                         type="button"
                         className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
                         aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
-                        disabled={SPORTS.length === 1 || locking || phase === "revealing"}
+                        disabled={SPORTS.length === 1 || phase === "revealing" || (locking && phase !== "done")}
                         onClick={() => selectSport(s.id)}
                       >
                         <img src={s.logo} alt="" width={20} height={20} />
@@ -774,7 +780,7 @@ export default function App({
             </div>
             <div className="result-cell">
               <span>Score</span>
-              <b style={{ color: "var(--good)" }}>{boardPts}</b>
+              <b style={{ color: scoreColor(result.err) }}>{boardPts}</b>
             </div>
           </div>
           <div className="bar"><i style={{ width: boardOn ? `${result.points / 10}%` : "0%" }}></i></div>
