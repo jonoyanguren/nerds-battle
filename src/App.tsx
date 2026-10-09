@@ -8,7 +8,7 @@ import { SLOTS, fold, fmt, fmtDate } from "./format";
 import { loadStats, saveStats } from "./storage";
 import { AuthButton, type AuthUser } from "./components/AuthButton";
 import { Face } from "./components/Face";
-import { Profile } from "./components/Profile";
+import { SectionNav } from "./components/SectionNav";
 import type {
   CatalogPlayer,
   ChallengePayload,
@@ -235,8 +235,6 @@ const STING_LABEL: Record<Sting, string> = {
   miss: "Fuera",
 };
 
-type Tab = "play" | "profile";
-
 async function fetchProfile(): Promise<ProfilePayload | null> {
   const res = await fetch("/api/me");
   if (!res.ok) return null;
@@ -253,14 +251,11 @@ export default function App({
 }) {
   const router = useRouter();
   const [sportId, setSportId] = useState(initialSportId);
-  const [tab, setTab] = useState<Tab>("play");
   const [challenge, setChallenge] = useState<ChallengePayload | null>(null);
   const [picks, setPicks] = useState<(RosterPick | null)[]>(emptyRoster);
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<Phase>("picking");
   const [stats, setStats] = useState<LocalStats>({ rounds: 0, best: 0, sum: 0 });
-  const [profile, setProfile] = useState<ProfilePayload | null>(null);
-  const [profileLoading, setProfileLoading] = useState(Boolean(user));
   const [sting, setSting] = useState<Sting | null>(null);
   const [result, setResult] = useState<RoundScore | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -276,9 +271,12 @@ export default function App({
   const [duelSting, setDuelSting] = useState(false);
 
   const applyProfile = (data: ProfilePayload) => {
-    setProfile(data);
     setStats({ rounds: data.rounds, best: data.best, sum: data.sum });
   };
+
+  useEffect(() => {
+    try { sessionStorage.setItem("nb-sport", sportId); } catch { /* modo privado */ }
+  }, [sportId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -299,19 +297,12 @@ export default function App({
   useEffect(() => {
     if (!user) {
       setStats(loadStats());
-      setProfile(null);
-      setProfileLoading(false);
       return;
     }
     let cancelled = false;
-    setProfileLoading(true);
     (async () => {
-      try {
-        const data = await fetchProfile();
-        if (!cancelled && data) applyProfile(data);
-      } finally {
-        if (!cancelled) setProfileLoading(false);
-      }
+      const data = await fetchProfile();
+      if (!cancelled && data) applyProfile(data);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -543,63 +534,52 @@ export default function App({
       <header className="hud">
         <div>
           <h1 className="wordmark"><Link href="/">NERDS <em>BATTLE</em></Link></h1>
-          <nav className="tabs" aria-label="Sección">
-            <button type="button" className={"tab" + (tab === "play" ? " on" : "")} onClick={() => setTab("play")}>
-              Juego
+          <SectionNav playHref={`/${sportId}`} />
+          {/* Agrupado por familia. Con dos o tres catálogos esto es una
+              fila y no se nota; con seis es lo que evita una ristra de
+              pastillas sueltas que no caben en un móvil. */}
+          <nav className="sports" aria-label="Catálogo">
+            {sportGroups().map(group => (
+              <div key={group.category} className="sport-group" role="group" aria-label={group.label}>
+                <span className="sport-group-label" aria-hidden="true">{group.label}</span>
+                {group.sports.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
+                    aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
+                    disabled={SPORTS.length === 1 || phase === "revealing" || (locking && phase !== "done")}
+                    onClick={() => selectSport(s.id)}
+                  >
+                    <img src={s.logo} alt="" width={20} height={20} />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <nav className="modes" aria-label="Modo de juego">
+            <button
+              type="button"
+              className={"mode-tab" + (mode === "solo" ? " on" : "")}
+              aria-pressed={mode === "solo"}
+              disabled={locking || phase === "revealing"}
+              onClick={() => selectMode("solo")}
+            >
+              1 jugador
             </button>
-            <button type="button" className={"tab" + (tab === "profile" ? " on" : "")} onClick={() => setTab("profile")}>
-              Perfil
+            <button
+              type="button"
+              className={"mode-tab" + (mode === "duel" ? " on" : "")}
+              aria-pressed={mode === "duel"}
+              disabled={locking || phase === "revealing"}
+              onClick={() => selectMode("duel")}
+            >
+              2 jugadores
             </button>
           </nav>
-          {tab === "play" && (
-            <>
-              {/* Agrupado por familia. Con dos o tres catálogos esto es una
-                  fila y no se nota; con seis es lo que evita una ristra de
-                  pastillas sueltas que no caben en un móvil. */}
-              <nav className="sports" aria-label="Catálogo">
-                {sportGroups().map(group => (
-                  <div key={group.category} className="sport-group" role="group" aria-label={group.label}>
-                    <span className="sport-group-label" aria-hidden="true">{group.label}</span>
-                    {group.sports.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        className={"sport-tab" + (s.id === (challenge?.sport.id ?? sportId) ? " on" : "")}
-                        aria-pressed={s.id === (challenge?.sport.id ?? sportId)}
-                        disabled={SPORTS.length === 1 || phase === "revealing" || (locking && phase !== "done")}
-                        onClick={() => selectSport(s.id)}
-                      >
-                        <img src={s.logo} alt="" width={20} height={20} />
-                        <span>{s.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </nav>
-              <nav className="modes" aria-label="Modo de juego">
-                <button
-                  type="button"
-                  className={"mode-tab" + (mode === "solo" ? " on" : "")}
-                  aria-pressed={mode === "solo"}
-                  disabled={locking || phase === "revealing"}
-                  onClick={() => selectMode("solo")}
-                >
-                  1 jugador
-                </button>
-                <button
-                  type="button"
-                  className={"mode-tab" + (mode === "duel" ? " on" : "")}
-                  aria-pressed={mode === "duel"}
-                  disabled={locking || phase === "revealing"}
-                  onClick={() => selectMode("duel")}
-                >
-                  2 jugadores
-                </button>
-              </nav>
-              {challenge && (
-                <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
-              )}
-            </>
+          {challenge && (
+            <div className="hud-meta">{challenge.sport.scope} · {fmtDate(challenge.updatedAt)}</div>
           )}
         </div>
         <div className="hud-right">
@@ -608,26 +588,22 @@ export default function App({
             <div className="hud-stat">Media<b>{avg}</b></div>
             <div className="hud-stat">Rondas<b>{stats.rounds}</b></div>
           </div>
-          <AuthButton user={user} />
+          <AuthButton user={user} redirectTo={`/${sportId}`} />
         </div>
       </header>
 
-      {tab === "profile" && (
-        <Profile user={user} profile={profile} loading={profileLoading} />
-      )}
-
-      {tab === "play" && loadError && (
+      {loadError && (
         <>
           <p className="credit">No se pudo cargar el reto.</p>
           <button className="btn primary" onClick={retryBoot}>Reintentar</button>
         </>
       )}
 
-      {tab === "play" && !loadError && !challenge && (
+      {!loadError && !challenge && (
         <div aria-busy="true" />
       )}
 
-      {tab === "play" && challenge && (
+      {challenge && (
       <>
       <section className="jumbo">
         <div>

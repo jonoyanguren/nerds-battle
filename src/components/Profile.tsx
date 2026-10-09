@@ -23,7 +23,7 @@ export function Profile({
           Entra con Google para guardar récord, media e historial. Sin cuenta se
           puede jugar; las cifras se quedan en este navegador.
         </p>
-        <AuthButton user={null} />
+        <AuthButton user={null} redirectTo="/perfil" />
       </section>
     );
   }

@@ -13,8 +13,9 @@ cifras** y al final descubres cuánto te has acercado.
 por estadística. Las cifras viven en el servidor (`/api/challenge`,
 `/api/players`, `/api/reveal`). En **2 jugadores** fichan uno a uno el mismo
 reto, sin repetir jugador, y gana quien menos error tenga; ese duelo no
-se guarda en el perfil. Login Google opcional: pestaña **Juego / Perfil**. Con cuenta
-se guardan las rondas (récord, media, mejor por stat, historial). Sin cuenta,
+se guarda en el perfil. Login Google opcional: **Juego** en `/{deporte}` y
+**Perfil** en `/perfil`. Con cuenta se guardan las rondas (récord, media,
+mejor por stat, historial). Sin cuenta,
 el HUD usa `localStorage`. Sin ranking público. En Vercel:
 https://nerds-battle-jonoyangurens-projects.vercel.app
 

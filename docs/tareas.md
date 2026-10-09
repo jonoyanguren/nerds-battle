@@ -57,13 +57,13 @@ en JSON: un archivo + cron semanal.
 
 ### M3 · Login con Google
 
-Auth.js. Entrar / salir + pestaña Perfil. Sin ruta `/perfil`.
+Auth.js. Entrar / salir + página `/perfil`.
 
 - [x] Botón “Entrar con Google”
 - [x] Sesión en el servidor
 - [x] Sin cuenta se puede jugar; el HUD va a localStorage
 - [x] Con cuenta, cada revelado guarda una `Round`
-- [x] Pestaña Perfil: récord, media, mejor por stat, historial
+- [x] Página `/perfil`: récord, media, mejor por stat, historial
 - [x] `GET /api/me` (401 si no hay sesión)
 - [x] Login en producción: el callback de Google iba sin path y no estaba
       guardado. Ver «Errores vistos», arreglados.
@@ -208,9 +208,8 @@ lo escribió**. Nada se tacha hasta entonces.
 - [ ] El selector de M9 **se queda** dentro de la partida, para cambiar de
       deporte sin volver atrás, y mueve la URL con `replace`: si recargas,
       sigues donde estabas
-- [ ] **Perfil sigue sin ruta propia.** Es una pestaña dentro de la
-      partida, así que desde la portada hay que entrar a un deporte para
-      verlo. Con el juego ya repartido en pantallas, eso chirría
+- [x] Ruta `/perfil`. Desde la portada y desde la partida, sin entrar a un
+      deporte. Juego desde Perfil vuelve al último catálogo si lo hay.
 
 ### Lo que se comprobó, y lo que salió
 
@@ -423,19 +422,11 @@ publica 1000.
 
 ---
 
-### 🟡 7 · Perfil no tiene ruta propia
-
-**Qué pasa.** Perfil es una pestaña dentro de la partida, así que desde la
-portada hay que entrar a un deporte para ver tu historial.
-
-**Por qué importa ahora.** Era coherente cuando todo era una pantalla. Con el
-juego repartido en rutas, chirría.
-
-**Arreglo.** Una ruta `/perfil`. Decisión de M3 que conviene revisar.
-
----
-
 ### ✅ Arreglados
+
+- **Perfil no tenía ruta propia.** Era una pestaña dentro de la partida; con
+  la portada había que entrar a un deporte para ver el historial. Ahora es
+  `/perfil`, enlazada desde la portada y el HUD.
 
 - **Con la ronda cerrada no se podía cambiar de deporte.** `locking` dejaba
   las pestañas deshabilitadas hasta «Siguiente». En `done` ya no se mira.

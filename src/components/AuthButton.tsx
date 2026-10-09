@@ -7,7 +7,13 @@ export type AuthUser = {
   image: string | null;
 };
 
-export function AuthButton({ user }: { user: AuthUser | null }) {
+export function AuthButton({
+  user,
+  redirectTo = "/",
+}: {
+  user: AuthUser | null;
+  redirectTo?: string;
+}) {
   if (user) {
     return (
       <form action={signOutNow} className="auth">
@@ -19,6 +25,7 @@ export function AuthButton({ user }: { user: AuthUser | null }) {
   }
   return (
     <form action={signInGoogle} className="auth">
+      <input type="hidden" name="redirectTo" value={redirectTo} />
       <button type="submit" className="btn auth-btn">Entrar con Google</button>
     </form>
   );
