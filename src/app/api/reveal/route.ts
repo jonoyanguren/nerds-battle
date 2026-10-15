@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getCatalog } from "@/catalogs/load";
 import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
 import { scoreRound } from "@/engine";
+import { openChallengeFor } from "@/lib/challenge-token";
 import { resolveRoster } from "@/lib/roster";
 import { saveRound } from "@/lib/rounds";
 import { hasStat } from "@/types";
@@ -14,29 +15,31 @@ export async function POST(request: Request) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "body" }, { status: 400 });
   }
-  const { sport, stat, names, target } = body as {
+  const { sport, stat, names, token } = body as {
     sport?: unknown;
     stat?: unknown;
     names?: unknown;
-    target?: unknown;
+    token?: unknown;
   };
   const sportId = typeof sport === "string" ? sport : DEFAULT_SPORT_ID;
   const catalog = getCatalog(sportId);
   if (
     !catalog ||
     typeof stat !== "string" ||
-    !hasStat(catalog, stat) ||
-    typeof target !== "number" ||
-    !Number.isFinite(target)
+    !hasStat(catalog, stat)
   ) {
     return NextResponse.json({ error: "fields" }, { status: 400 });
+  }
+  const opened = openChallengeFor(token, sportId, stat);
+  if (!opened) {
+    return NextResponse.json({ error: "token" }, { status: 400 });
   }
   const roster = resolveRoster(catalog.players[stat], names);
   if (!roster.ok) {
     return NextResponse.json({ error: roster.error }, { status: 400 });
   }
   const { names: typedNames, values, photoIds, total } = roster;
-  const score = scoreRound(total, target);
+  const score = scoreRound(total, opened.target);
 
   const session = await auth();
   if (session?.user?.id) {
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         sport: sportId,
         stat,
-        target,
+        target: opened.target,
         names: typedNames,
         photoIds,
         values,

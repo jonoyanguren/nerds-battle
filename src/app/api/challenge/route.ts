@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCatalog } from "@/catalogs/load";
 import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
 import { makeChallenge } from "@/engine";
+import { signChallenge } from "@/lib/challenge-token";
 import { hasStat } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,14 @@ export async function POST(request: Request) {
   }
   const prevStatId = typeof prev === "string" && hasStat(catalog, prev) ? prev : null;
   const challenge = makeChallenge(catalog, prevStatId);
+  const token = signChallenge({
+    sport: catalog.sport.id,
+    stat: challenge.stat.id,
+    target: challenge.target,
+  });
   return NextResponse.json({
     ...challenge,
+    token,
     updatedAt: catalog.updatedAt,
     poolSize: catalog.players[challenge.stat.id].length,
   });

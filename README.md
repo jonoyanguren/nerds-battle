@@ -86,15 +86,15 @@ LaLiga, y goles con la selección.
 
 ## Roadmap
 
-El tablero de trabajo está en [`docs/tareas.md`](docs/tareas.md).
-La mecánica y la curva, en [`docs/game-design.md`](docs/game-design.md).
+El estado (qué está abierto) vive en [Trello](https://trello.com/b/w4I3qRLN/nerds-battle). El porqué, en
+[`docs/tareas.md`](docs/tareas.md). La mecánica y la curva, en
+[`docs/game-design.md`](docs/game-design.md).
 
-- [x] M1 · Pasar a Next.js (mismo juego)
-- [x] M2 · Prisma listo (catálogos siguen en JSON)
-- [x] M3 · Login con Google (Auth.js) + Perfil / rondas
-- [x] M4 · API ciega
-- [x] M5 · Cron → JSON
-- [x] M6 · 2 jugadores (mismo dispositivo)
-- [x] M7 · Deploy
-- [x] M8 · Segundo catálogo: fútbol
-- [ ] M0 · Playtest con colegas y ajustar la curva
+- [x] Pasar a Next.js (mismo juego)
+- [x] Prisma listo (catálogos siguen en JSON)
+- [x] Login con Google (Auth.js) + Perfil / rondas
+- [x] API ciega
+- [x] Cron → JSON
+- [x] 2 jugadores (mismo dispositivo)
+- [x] Deploy
+- [x] Segundo catálogo: fútbol

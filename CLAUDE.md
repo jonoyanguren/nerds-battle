@@ -26,7 +26,7 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `src/lib/prisma.ts` — cliente Prisma (`PRISMA_DIRECT_TCP_URL` + adapter `pg`).
 - `src/lib/rounds.ts` — persistir y leer rondas del usuario.
 - `scripts/curva.mjs` — `npm run curva`: cuenta las rondas guardadas y dice
-  si la curva es dura o blanda. El criterio está en `docs/tareas.md`, M0.
+  si la curva es dura o blanda. El criterio está en `docs/tareas.md`.
 - `src/lib/roster.ts` — valida 5 nombres y les saca las cifras. Lo usan
   `/api/reveal` y `/api/duel`; no duplicar esa validación en cada ruta.
 - `src/auth.ts` — Auth.js (Google). `src/components/AuthButton.tsx` — entrar / salir.
@@ -37,9 +37,10 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `.env.example` — `DATABASE_URL`, `PRISMA_DIRECT_TCP_URL`, `AUTH_*`.
 - `src/data.generated.json` — top ~3000 NBA + `nbaId`. Lo pisa `npm run sync`
   (`scripts/sync-nba.mjs`). Si el job falla, no se toca el JSON anterior.
-- `src/engine.ts` — motor: `makeChallenge(catalog, prevStatId)` y `scoreRound`.
-  Funciones puras, sin React. El catálogo es `{ sport, stats, players[statId] }`.
-  No importar desde el cliente.
+- `src/engine.ts` — motor: `makeChallenge(catalog, prevStatId, rng?)`,
+  `rngFromSeed` y `scoreRound`. Funciones puras, sin React. El catálogo es
+  `{ sport, stats, players[statId] }`. No importar desde el cliente.
+- `src/lib/challenge-token.ts` — firma HMAC del reto. Solo servidor.
 - `src/format.ts`, `src/photos.ts` — helpers ciegos (cliente).
 - `src/storage.ts` — HUD del invitado (`localStorage`). Con sesión no se usa.
 - `src/App.tsx` — UI de la partida (client). Modo 1 / 2 jugadores.
@@ -53,7 +54,8 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 - `docs/datos.md` — **de dónde sale cada cifra y qué no cubre.** Añadir un
   catálogo obliga a añadir aquí su ficha.
 - `docs/game-design.md` — mecánica, puntuación y decisiones abiertas.
-- `docs/tareas.md` — milestones y tareas (el tablero para ir haciendo).
+- `docs/tareas.md` — decisiones y porqués. El estado (qué está abierto)
+  vive en Trello, no aquí.
 - `README.md` — visión general y roadmap.
 
 ## Reglas de trabajo
@@ -81,18 +83,15 @@ por valor, ordenar el buscador por stat) mata el juego. No lo hagas.
 Next.js desplegado en Vercel (`https://nerds-battle-jonoyangurens-projects.vercel.app`).
 API ciega + catálogos en JSON. Login Google opcional: se puede jugar sin cuenta.
 Con sesión, las rondas se guardan y se ven en `/perfil`. Modo 2 jugadores en el
-mismo dispositivo (M6): mismo reto, fichan uno a uno sin repetir jugador,
+mismo dispositivo: mismo reto, fichan uno a uno sin repetir jugador,
 gana quien menos error tenga; el duelo no se guarda.
 
 Tres catálogos: NBA, fútbol y Fórmula 1. El selector los agrupa por familia
 (`category` en cada `Sport`).
 
-**Siguiente: M0.** Ya han jugado dos personas y la curva de puntuación
-(`error × 5`) sigue sin validar; `npm run curva` da el veredicto contra las
-rondas guardadas. Detrás viene el salto de pantalla única a sitio —landing,
-reto diario, rey de la pista y 1 contra 1 online—, y tres de esas cuatro
-dependen de que el reto lo emita y valide el servidor (M11), porque hoy el
-cliente manda el `target` al revelar. Orden y porqués en `docs/tareas.md`.
+Landing, rutas por deporte y `/perfil` ya están. El reto se firma al
+emitir; `reveal` y `duel` no aceptan el `target` del cliente. Qué está
+abierto se ve en Trello; el porqué, en `docs/tareas.md`.
 
 ## Idioma
 

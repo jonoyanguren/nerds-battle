@@ -46,6 +46,8 @@ export type Challenge = {
 };
 
 export type ChallengePayload = Challenge & {
+  /** Firma del servidor. Se manda al revelar; el `target` del cliente no cuenta. */
+  token: string;
   updatedAt: string;
   poolSize: number;
 };
@@ -100,7 +102,7 @@ export type ProfilePayload = LocalStats & {
 
 export type Phase = "picking" | "revealing" | "done";
 
-/** Un jugador, o dos pasándose el mismo móvil (`docs/tareas.md`, M6). */
+/** Un jugador, o dos pasándose el mismo móvil. */
 export type Mode = "solo" | "duel";
 
 /** Quién gana el duelo. `null` es empate. */

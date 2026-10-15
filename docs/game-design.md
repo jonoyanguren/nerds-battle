@@ -55,7 +55,7 @@ Es lo primero que hay que tocar tras unas cuantas partidas.
 No cambia la puntuación. Con Google, cada revelado se guarda (`Round`). El
 Perfil muestra objetivo, suma, error y la plantilla. Sin cuenta, el HUD
 sigue en `localStorage`. No hay ranking público: comparar con otros espera
-a que haya playtest (M0) y, si se compara, retos emitidos por el servidor.
+a que haya playtest y, si se compara, retos emitidos por el servidor.
 
 ## Modo 2 jugadores
 

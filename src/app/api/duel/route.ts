@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { getCatalog } from "@/catalogs/load";
 import { DEFAULT_SPORT_ID } from "@/catalogs/registry";
 import { duelWinner, scoreRound } from "@/engine";
+import { openChallengeFor } from "@/lib/challenge-token";
 import { resolveRoster } from "@/lib/roster";
 import { hasStat } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 /**
- * M6: dos jugadores, el mismo reto, el mismo móvil.
+ * Dos jugadores, el mismo reto, el mismo móvil.
  *
  * Las dos plantillas se revelan de una vez. Un nombre no puede estar en las
  * dos: fichan uno a uno sobre el mismo pool.
@@ -21,10 +22,10 @@ export async function POST(request: Request) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "body" }, { status: 400 });
   }
-  const { sport, stat, target, rosters } = body as {
+  const { sport, stat, token, rosters } = body as {
     sport?: unknown;
     stat?: unknown;
-    target?: unknown;
+    token?: unknown;
     rosters?: unknown;
   };
   const sportId = typeof sport === "string" ? sport : DEFAULT_SPORT_ID;
@@ -32,12 +33,13 @@ export async function POST(request: Request) {
   if (
     !catalog ||
     typeof stat !== "string" ||
-    !hasStat(catalog, stat) ||
-    typeof target !== "number" ||
-    !Number.isFinite(target) ||
-    target <= 0
+    !hasStat(catalog, stat)
   ) {
     return NextResponse.json({ error: "fields" }, { status: 400 });
+  }
+  const opened = openChallengeFor(token, sportId, stat);
+  if (!opened) {
+    return NextResponse.json({ error: "token" }, { status: 400 });
   }
   if (!Array.isArray(rosters) || rosters.length !== 2) {
     return NextResponse.json({ error: "rosters" }, { status: 400 });
@@ -54,8 +56,8 @@ export async function POST(request: Request) {
   if (a.names.some(name => b.names.includes(name))) {
     return NextResponse.json({ error: "shared" }, { status: 400 });
   }
-  const scoreA = scoreRound(a.total, target);
-  const scoreB = scoreRound(b.total, target);
+  const scoreA = scoreRound(a.total, opened.target);
+  const scoreB = scoreRound(b.total, opened.target);
 
   return NextResponse.json({
     sides: [

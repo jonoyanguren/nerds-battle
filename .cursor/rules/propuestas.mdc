@@ -9,4 +9,6 @@ Cuando pida qué haría, qué sigue, o una propuesta: **solo cambios de software
 
 No recomendar playtest operativo: mandar el enlace, jugar N rondas, `npm run curva` como tarea para él, ni “decirles que entren con Google”. Eso lo gestiona aparte.
 
-El tablero (M0, curva) puede existir en `docs/tareas.md`; no lo ofrezcas como el siguiente paso mío.
+El estado vive en Trello. `docs/tareas.md` es contexto (decisiones, porqués),
+no el tablero. No ofrezcas playtest (curva, “entrar con Google”) como
+el siguiente paso mío.

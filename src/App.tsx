@@ -262,7 +262,7 @@ export default function App({
   const [locking, setLocking] = useState(false);
   const timers = useRef<number[]>([]);
 
-  // --- M6: dos jugadores, mismo móvil ---
+  // --- dos jugadores, mismo móvil ---
   const [mode, setMode] = useState<Mode>("solo");
   const [turn, setTurn] = useState<1 | 2>(1);
   const [home, setHome] = useState<(RosterPick | null)[]>(emptyRoster);
@@ -355,7 +355,7 @@ export default function App({
         body: JSON.stringify({
           sport: challenge.sport.id,
           stat: challenge.stat.id,
-          target: challenge.target,
+          token: challenge.token,
           rosters: [firstPicks.map(p => p.name), second.map(p => p.name)],
         }),
       });
@@ -396,7 +396,7 @@ export default function App({
           sport: challenge.sport.id,
           stat: challenge.stat.id,
           names,
-          target: challenge.target,
+          token: challenge.token,
         }),
       });
       if (!res.ok) throw new Error("reveal");
