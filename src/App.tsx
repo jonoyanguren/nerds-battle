@@ -261,6 +261,9 @@ export default function App({
   const [loadError, setLoadError] = useState(false);
   const [locking, setLocking] = useState(false);
   const timers = useRef<number[]>([]);
+  /** Promesa en vuelo del montaje. Strict Mode repite el efecto; si se
+   *  lanza otra petición, la segunda respuesta pisa el reto de la primera. */
+  const challengeInflight = useRef<{ sportId: string; promise: Promise<ChallengePayload> } | null>(null);
 
   // --- dos jugadores, mismo móvil ---
   const [mode, setMode] = useState<Mode>("solo");
@@ -278,11 +281,27 @@ export default function App({
     try { sessionStorage.setItem("nb-sport", sportId); } catch { /* modo privado */ }
   }, [sportId]);
 
+  // Una sola fuente: la ruta. El click solo navega. Si también pidiera
+  // el reto, esa respuesta pintaría uno y el montaje de `/futbol` (o el
+  // que sea) lo cambiaría por otro distinto.
   useEffect(() => {
     let cancelled = false;
+    if (challengeInflight.current && challengeInflight.current.sportId !== initialSportId) {
+      resetRound();
+      setSportId(initialSportId);
+    }
+    setChallenge(null);
+    setLoadError(false);
+
+    const inflight = challengeInflight.current;
+    const request = inflight?.sportId === initialSportId
+      ? inflight.promise
+      : fetchChallenge(initialSportId, null);
+    challengeInflight.current = { sportId: initialSportId, promise: request };
+
     (async () => {
       try {
-        const data = await fetchChallenge(initialSportId, null);
+        const data = await request;
         if (!cancelled) setChallenge(data);
       } catch {
         if (!cancelled) setLoadError(true);
@@ -292,7 +311,7 @@ export default function App({
       cancelled = true;
       timers.current.forEach(clearTimeout);
     };
-  }, []);
+  }, [initialSportId]);
 
   useEffect(() => {
     if (!user) {
@@ -464,20 +483,17 @@ export default function App({
     }
   };
 
-  const selectSport = async (id: string) => {
+  const selectSport = (id: string) => {
     if (id === sportId || phase === "revealing" || (locking && phase !== "done")) return;
     resetRound();
     setSportId(id);
     setChallenge(null);
+    setLoadError(false);
     // La URL tiene que decir la verdad: con `replace` no se llena el
     // historial de cambios de deporte, pero al recargar sigues aquí.
+    // El reto lo pide el efecto de `initialSportId`, no este click:
+    // la ruta nueva vuelve a montar la pantalla.
     router.replace(`/${id}`, { scroll: false });
-    try {
-      const data = await fetchChallenge(id, null);
-      setChallenge(data);
-    } catch {
-      setLoadError(true);
-    }
   };
 
   const retryBoot = async () => {
