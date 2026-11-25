@@ -1,24 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Anton, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "../index.css";
 
-const anton = Anton({
-  weight: "400",
+const nunito = Nunito({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
-  variable: "--font-anton",
-});
-
-const plexSans = IBM_Plex_Sans({
-  weight: ["400", "500", "600"],
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const plexMono = IBM_Plex_Mono({
-  weight: ["400", "600"],
-  subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-nunito",
 });
 
 export const metadata: Metadata = {
@@ -26,10 +14,13 @@ export const metadata: Metadata = {
   description: "Estima totales de carrera. Cinco jugadores, un objetivo, sin ver las cifras.",
 };
 
+const themeScript = `(function(){try{var t=localStorage.getItem("nb-theme");if(t!=="light"&&t!=="dark")t="light";document.documentElement.setAttribute("data-theme",t)}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${anton.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <body className={plexSans.className}>
+    <html lang="es" className={nunito.variable} suppressHydrationWarning>
+      <body className={nunito.className}>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <div id="root">{children}</div>
       </body>
     </html>

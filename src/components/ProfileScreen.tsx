@@ -7,6 +7,7 @@ import type { ProfilePayload } from "@/types";
 import { AuthButton, type AuthUser } from "./AuthButton";
 import { Profile } from "./Profile";
 import { SectionNav } from "./SectionNav";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 export function ProfileScreen({ user }: { user: AuthUser | null }) {
   const [profile, setProfile] = useState<ProfilePayload | null>(null);
@@ -43,10 +44,11 @@ export function ProfileScreen({ user }: { user: AuthUser | null }) {
     <div className="arena">
       <header className="hud">
         <div>
-          <h1 className="wordmark"><Link href="/">NERDS <em>BATTLE</em></Link></h1>
+          <h1 className="wordmark"><Link href="/">Nerds <em>Battle</em></Link></h1>
           <SectionNav playHref={playHref} />
         </div>
         <div className="hud-right">
+          <ThemeSwitch />
           <AuthButton user={user} redirectTo="/perfil" />
         </div>
       </header>

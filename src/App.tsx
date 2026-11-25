@@ -9,6 +9,7 @@ import { loadStats, saveStats } from "./storage";
 import { AuthButton, type AuthUser } from "./components/AuthButton";
 import { Face } from "./components/Face";
 import { SectionNav } from "./components/SectionNav";
+import { ThemeSwitch } from "./components/ThemeSwitch";
 import type {
   CatalogPlayer,
   ChallengePayload,
@@ -101,7 +102,7 @@ function Slot({ n, pick, sport, revealed, locked, onRemove }: SlotProps) {
       {revealed && pick && pick.value != null
         ? <SlotValue key={pick.name} value={pick.value} />
         : pick && !locked
-          ? <button className="slot-x" onClick={onRemove}>QUITAR</button>
+          ? <button className="slot-x" onClick={onRemove}>Quitar</button>
           : <div className="slot-drop">—</div>}
     </div>
   );
@@ -549,7 +550,7 @@ export default function App({
 
       <header className="hud">
         <div>
-          <h1 className="wordmark"><Link href="/">NERDS <em>BATTLE</em></Link></h1>
+          <h1 className="wordmark"><Link href="/">Nerds <em>Battle</em></Link></h1>
           <SectionNav playHref={`/${sportId}`} />
           {/* Agrupado por familia. Con dos o tres catálogos esto es una
               fila y no se nota; con seis es lo que evita una ristra de
@@ -599,6 +600,7 @@ export default function App({
           )}
         </div>
         <div className="hud-right">
+          <ThemeSwitch />
           <div className="hud-stats">
             <div className="hud-stat">Récord<b>{stats.best}</b></div>
             <div className="hud-stat">Media<b>{avg}</b></div>

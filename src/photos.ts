@@ -13,7 +13,7 @@ export function initials(name: string) {
 }
 
 /** Tono estable por nombre, para que un hueco sin foto no se vea vacío. */
-const TONES = ["#243044", "#2A221C", "#1C2A28", "#2A2430", "#1B2430"];
+const TONES = ["#F3C7B6", "#F6D3A8", "#E7CDB8", "#F0C9C4", "#E4D2B4"];
 
 export function fallbackTone(name: string) {
   let h = 0;

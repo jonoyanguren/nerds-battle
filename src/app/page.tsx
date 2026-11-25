@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { sportGroups } from "@/catalogs/registry";
 import { AuthButton } from "@/components/AuthButton";
 import { SectionNav } from "@/components/SectionNav";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 
 /**
  * Landing. Hasta ahora el juego era una sola pantalla y el deporte se
@@ -27,10 +28,13 @@ export default async function Landing() {
     <div className="landing">
       <header className="landing-top">
         <div>
-          <h1 className="wordmark">NERDS <em>BATTLE</em></h1>
+          <h1 className="wordmark">Nerds <em>Battle</em></h1>
           <SectionNav playHref="/" />
         </div>
-        <AuthButton user={user} />
+        <div className="landing-tools">
+          <ThemeSwitch />
+          <AuthButton user={user} />
+        </div>
       </header>
 
       <section className="landing-hero">
